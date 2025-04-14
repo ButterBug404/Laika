@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb'}));
 
 let model;
 async function loadModel() {
@@ -19,17 +19,16 @@ loadModel();
 app.post('/predict', async (req, res) => {
 	try{
 		const data = req.body.data;
-		const inputTensor = tf.tensor([data]);
+		const inputTensor = tf.tensor(data);
 		const prediction = model.predict(inputTensor);
 		const result = Array.from(prediction.dataSync());
 		res.json({ prediction: result});
 	}catch(err){
-		res.status(500).json({error: err.message})
+		res.status(500).json({error: err.message, line: err.line})
 	}
 });
 
 const PORT = 3001;
 app.listen(PORT, async () => {
-	await loadModel();
 	console.log(`Servidor en http://localhost${PORT}`);
 })
