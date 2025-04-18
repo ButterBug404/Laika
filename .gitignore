@@ -21,7 +21,6 @@ ios/build/
 
 # MariaDB data directories
 **/mysql/
-**/mariadb/
 *.ibd
 *.frm
 *.MYD
