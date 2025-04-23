@@ -1,0 +1,31 @@
+name: Sync to Snack.dev
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: |
+          npm install snack-sdk
+
+      - name: Sync to Snack.dev
+        run: node .github/scripts/sync-to-snack.js
+        env:
+          EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
+          SNACK_ID: ${{ secrets.SNACK_ID }}
+          APP_DIRECTORY: ${{ secrets.APP_DIRECTORY || 'app' }}
+
+
