@@ -29,7 +29,7 @@ import styles from './Components/estilos.js';
 // Lista de estados
 const estados = [
   'Selecciona Estado',
-  'Ciudad de México',
+  'Ciudad de México (CDMX)',
   'Estado de México',
   'Jalisco',
 ];
