@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 //Local packages
 import { retrieveUser } from './controllers/mariadb.js';
+import { emailValidator, passwordValidator, validateRequest } from './utils/validators.js';
+import { generateToken } from './utils/jwt.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,12 +21,13 @@ async function loadModel() {
 }
 loadModel();
 
-app.post('/login', async (req, res) => {
+//TODO
+//Hash password
+app.post('/login', [...emailValidator, passwordValidator], validateRequest, async (req, res) => {
 	try{
-		const user = await retrieveUser(req.body.email, "");
-		console.log("the user:", user);
+		const user = await retrieveUser(req.body.email, req.body.password);
 		if(user){
-			res.status(200).json({ success: user});
+			res.status(200).json({ token: generateToken(user)});
 		}else{
 			res.status(200).json({ failure: "we failed!"});
 		}
@@ -33,19 +36,7 @@ app.post('/login', async (req, res) => {
 	}
 });
 
-app.post('/predict', async (req, res) => {
-	try{
-		const data = req.body.data;
-		const inputTensor = tf.tensor(data);
-		const prediction = model.predict(inputTensor);
-		const result = Array.from(prediction.dataSync());
-		res.json({ prediction: result});
-	}catch(err){
-		res.status(500).json({error: err.message, line: err.line})
-	}
-});
-
 const PORT = 3001;
 app.listen(PORT, async () => {
-	console.log(`Servidor en http://localhost${PORT}`);
+	console.log(`Servidor en http://localhost:${PORT}`);
 })

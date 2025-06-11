@@ -10,11 +10,10 @@ const pool = mariadb.createPool({
 	connectionLimit: 5
 });
 
-export async function retrieveUser(email, password) {
+export async function retrieveUser(email) {
 	let conn;
 	try {
 		conn = await pool.getConnection();
-		//TODO: add password when hash works
 		const rows = await conn.query("SELECT * FROM laika_users WHERE email = ?", [email]);
 		return rows;
 	} catch (err) {
