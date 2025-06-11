@@ -92,7 +92,7 @@ const App = () => {
     }
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!correo || !password) {
       Alert.alert(
         'Error',
@@ -103,8 +103,22 @@ const App = () => {
         'La contraseña debe tener al menos 6 caracteres y una mayúscula.'
       );
     } else {
-      setIsLoggedIn(true);
-      setPasswordError('');
+			console.log("LOG: do it");
+			const res = await fetch(process.env.EXPO_PUBLIC_API_URL+"/login",
+				{
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({email: correo}),
+				}
+			)
+			const data = await res.json();
+			console.log("LOG: ",data)
+      if(data.success){
+				setIsLoggedIn(true);
+				setPasswordError('');
+			}
     }
   };
 
