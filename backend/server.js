@@ -1,7 +1,10 @@
-import * as tf from '@tensorflow/tfjs-node'
+//External packages
+import * as tf from '@tensorflow/tfjs-node';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+//Local packages
+import { retrieveUser } from './controllers/mariadb.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +18,20 @@ async function loadModel() {
 	model = await tf.loadLayersModel(`file://${modelPath}`);
 }
 loadModel();
+
+app.post('/login', async (req, res) => {
+	try{
+		const user = await retrieveUser(req.body.email, "");
+		console.log("the user:", user);
+		if(user){
+			res.status(200).json({ success: user});
+		}else{
+			res.status(200).json({ failure: "we failed!"});
+		}
+	}catch(err){
+		res.status(500).json({error: err.message, line: err.line})
+	}
+});
 
 app.post('/predict', async (req, res) => {
 	try{
