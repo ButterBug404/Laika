@@ -332,7 +332,7 @@ const App = () => {
         <Tab.Screen name="Inicio" component={HomeScreen} />
         <Tab.Screen name="Mascotas" component={MascotasScreen} />
         <Tab.Screen name="Registrar" component={RegistrarScreen} />
-        <Tab.Screen name="Adopción" component={AdoptaScreen} />
+        <Tab.Screen name="Adopta" component={AdoptaScreen} />
         <Tab.Screen name="Perfil">
           {() => <PerfilScreen setIsLoggedIn={setIsLoggedIn} />}
         </Tab.Screen>
