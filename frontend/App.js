@@ -1,3 +1,4 @@
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
   ImageBackground,
@@ -14,22 +15,23 @@ import {
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Archivos de componentes
-import Adoptar from './Components/adoptar';
-import Cuenta from './Components/cuenta';
 import Inicio from './Components/Home';
-import Mascotas from './Components/mis_mascotas.js';
-import Registrar from './Components/registrar';
-import styles from './Components/estilos.js';
+import Registrar from './Components/Registrar';
+import Mascotas from './Components/Mis_Mascotas.js';
+import Adoptar from './Components/Adoptar';
+import Cuenta from './Components/Cuenta';
 
-// Lista de estados
+// Estilos
+import styles from './Components/Estilos.js';
+
 const estados = [
   'Selecciona Estado',
-  'Ciudad de México (CDMX)',
+  'Ciudad de México',
   'Estado de México',
   'Jalisco',
 ];
@@ -47,7 +49,7 @@ const PerfilScreen = ({ setIsLoggedIn }) => (
 const App = () => {
   const [selectedEstado, setSelectedEstado] = useState('');
   const [isSignUp, setIsSignUp] = useState(false); // Alternar entre inicio y registro
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para manejar el login
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado para manejar el login
   const [correo, setCorreo] = useState('');
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -103,22 +105,22 @@ const App = () => {
         'La contraseña debe tener al menos 6 caracteres y una mayúscula.'
       );
     } else {
-			console.log("LOG: do it");
-			const res = await fetch(process.env.EXPO_PUBLIC_API_URL+"/login",
-				{
-					method: "POST",
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({email: correo}),
-				}
-			)
-			const data = await res.json();
-			console.log("LOG: ",data)
+      console.log("LOG: do it");
+      const res = await fetch(process.env.EXPO_PUBLIC_API_URL+"/login",
+        {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({email: correo}),
+        }
+      )
+      const data = await res.json();
+      console.log("LOG: ",data)
       if(data.success){
-				setIsLoggedIn(true);
-				setPasswordError('');
-			}
+        setIsLoggedIn(true);
+        setPasswordError('');
+      }
     }
   };
 
@@ -127,23 +129,25 @@ const App = () => {
       <SafeAreaProvider>
         <SafeAreaView style={styles.containerApp}>
           <ImageBackground
-            source={require('./assets/dddepth-169.jpg')}
+            source={require('./assets/background.jpg')}
             style={styles.card}
             resizeMode="cover"
             imageStyle={styles.backgroundImage}>
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={styles.keyboardAvoidingView}>
-              <ScrollView contentContainerStyle={styles.scrollContentContainer}>
+              <ScrollView 
+                contentContainerStyle={styles.scrollContentContainer}
+                showsVerticalScrollIndicator={false}>
                 <Image
-                  source={require('./assets/Mod1.gif')}
+                  source={require('./assets/Login.gif')}
                   style={styles.logoApp}
                 />
-
+                <View style={[styles.formContainer, { flex: 1 }]}>
                 <Text style={styles.title}>Laika</Text>
 
                 <Text style={styles.subtitle2}>
-                  buscaremos a tu peludito en todo el universo.
+                  Buscaremos a tu peludito en todo el universo.
                 </Text>
                 <Text style={styles.subtitle}>
                   {isSignUp
@@ -282,7 +286,7 @@ const App = () => {
                       ? '¿Ya tienes cuenta? Inicia sesión'
                       : '¿No tienes cuenta? Regístrate'}
                   </Text>
-                </TouchableOpacity>
+                </TouchableOpacity></View>
               </ScrollView>
             </KeyboardAvoidingView>
           </ImageBackground>
@@ -329,10 +333,10 @@ const App = () => {
           headerStyle: { backgroundColor: '#b04f4f' },
           headerTintColor: '#f6d3c3',
         })}>
-        <Tab.Screen name="Inicio" component={HomeScreen} />
+        <Tab.Screen name="Registrar" component={RegistrarScreen} /><Tab.Screen name="Inicio" component={HomeScreen} />
         <Tab.Screen name="Mascotas" component={MascotasScreen} />
-        <Tab.Screen name="Registrar" component={RegistrarScreen} />
-        <Tab.Screen name="Adopta" component={AdoptaScreen} />
+        
+        <Tab.Screen name="Adopción" component={AdoptaScreen} />
         <Tab.Screen name="Perfil">
           {() => <PerfilScreen setIsLoggedIn={setIsLoggedIn} />}
         </Tab.Screen>
