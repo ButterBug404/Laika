@@ -1,5 +1,12 @@
 import { body, validationResult } from 'express-validator'
 
+export const usernameValidator = [
+	body('username')
+	.exists().withMessage('Username is required')
+	.notEmpty()
+	.escape()
+];
+
 export const emailValidator = [
 	body('email')
 	.exists().withMessage('Email is required')
