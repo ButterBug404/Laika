@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,87 +6,214 @@ import {
   Image,
   SafeAreaView,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useRoute, useIsFocused } from '@react-navigation/native';
 
-const Home = () => {
-  const [mascotas, setMascotas] = React.useState([
-    {
-      id: '1',
-      nombre: 'Firulais',
-      edad: '2 años',
-      raza: 'Golden Retriever',
-      estado: 'Presente',
-      imagen: 'https://imgs.search.brave.com/ZafHjAFOxVGuNnA9MVvKkjxki8VGsscankVblDP-lbg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzExLzM1LzY1LzMz/LzM2MF9GXzExMzU2/NTMzODJfQ0pEZmc4/R3hCMEljalhIOFVi/QmRUYk1DRE8yb213/YnYuanBn',
-    },
-    {
-      id: '2',
-      nombre: 'Luna',
-      edad: '1 año',
-      raza: 'Pastor Alemán',
-      estado: 'Desaparecido',
-      imagen: 'https://imgs.search.brave.com/NCAUWm_n09bDpCb1rqmrjsoyzNHj41b6HuhxpA9K3jY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jb250/ZW50Lm5hdGlvbmFs/Z2VvZ3JhcGhpYy5j/b20uZXMvbWVkaW8v/MjAyNC8wNy8wNS9v/am9zLXBlcnJvcy00/XzVlY2YxYjFhXzI0/MDcwNTA4NDE0OF84/MDB4ODAwLmpwZw',
-    },
-    {
-      id: '3',
-      nombre: 'Max',
-      edad: '3 años',
-      raza: 'Labrador',
-      estado: 'Presente',
-      imagen: 'https://imgs.search.brave.com/-QvVD1JB8mK_vBIdzVGSHS6ROqbb2QkLHxrVsERFE-o/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90My5m/dGNkbi5uZXQvanBn/LzA4Lzk3LzIwLzc0/LzM2MF9GXzg5NzIw/NzQ4OV9pSGtqOFZF/ZVI1aUJXZ2NpdHEx/MVJDYXZvbU1WTU13/VS5qcGc',
-    },
-  ]);
+// Import shared data
+import { getMascotas, updateMascotaEstado, updateMascotaData } from './MascotasData';
+
+const MisMascotas = () => {
+  const route = useRoute();
+  const [mascotas, setMascotas] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const isFocused = useIsFocused();
+
+  // Get categorized mascotas
+  const getMascotasByType = (type) => {
+    return mascotas.filter(pet => pet.tipoRegistro === type);
+  };
+
+  const getMascotasByStatus = (status) => {
+    return mascotas.filter(pet => pet.estado === status);
+  };
+
+  useEffect(() => {
+    // Load all mascotas from shared data when screen is focused
+    if (isFocused) {
+      setMascotas(getMascotas());
+    }
+
+    // If a specific pet was selected from Cuenta.js, scroll to it
+    if (route.params && route.params.perroId) {
+      // Implement scroll to specific pet if needed
+    }
+  }, [route.params, isFocused]);
 
   const handleReportarDesaparecido = (id) => {
-    // Lógica para cambiar el estado a "Desaparecido"
-    const nuevasMascotas = mascotas.map(mascota =>
-      mascota.id === id ? { ...mascota, estado: 'Desaparecido' } : mascota
-    );
-    setMascotas(nuevasMascotas);
+    // Update the shared data and local state
+    const updatedMascotas = updateMascotaEstado(id, 'Desaparecido');
+    setMascotas([...updatedMascotas]);
   };
 
   const handleReportarEncontrado = (id) => {
-    // Lógica para cambiar el estado a "Presente"
-    const nuevasMascotas = mascotas.map(mascota =>
-      mascota.id === id ? { ...mascota, estado: 'Presente' } : mascota
-    );
-    setMascotas(nuevasMascotas);
+    // Update the shared data and local state
+    const updatedMascotas = updateMascotaEstado(id, 'Presente');
+    setMascotas([...updatedMascotas]);
+  };
+
+  const startEditing = (mascota) => {
+    setEditingId(mascota.id);
+    setEditData({
+      nombre: mascota.nombre,
+      edad: mascota.edad,
+      raza: mascota.raza
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditData({});
+  };
+
+  const saveEditing = (id) => {
+    // Validate input
+    if (!editData.nombre || !editData.edad || !editData.raza) {
+      Alert.alert('Error', 'Por favor, completa todos los campos.');
+      return;
+    }
+
+    // Update mascota data
+    const updatedMascotas = updateMascotaData(id, editData);
+    setMascotas([...updatedMascotas]);
+    setEditingId(null);
+    setEditData({});
+    
+    Alert.alert('Éxito', 'Datos actualizados correctamente.');
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditData({
+      ...editData,
+      [field]: value
+    });
+  };
+
+  const getPetTypeLabel = (pet) => {
+    if (pet.tipoRegistro === 'adopcion') return 'En adopción';
+    if (pet.tipoRegistro === 'encontrada') return 'Encontrada';
+    return pet.estado;
+  };
+
+  const getPetTypeColor = (pet) => {
+    if (pet.tipoRegistro === 'adopcion') return '#4682B4'; // Steel Blue
+    if (pet.tipoRegistro === 'encontrada') return '#9370DB'; // Medium Purple
+    return pet.estado === 'Presente' ? '#32CD32' : '#FF6347';
   };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.titulo}>Mis Mascotas registradas</Text>
-        <View style={styles.verticalContainer}>
-          {mascotas.map((mascota) => (
-            <View key={mascota.id} style={styles.verticalBox}>
-              <Image style={styles.imageVertical} source={{ uri: mascota.imagen }} />
-              <View style={styles.verticalTextContainer}>
-                <Text style={styles.verticalName}>{mascota.nombre}</Text>
-                <Text style={styles.verticalDetail}>Edad: {mascota.edad}</Text>
-                <Text style={styles.verticalDetail}>Raza: {mascota.raza}</Text>
-                <Text style={styles.verticalDetail}>Estado: {mascota.estado}</Text>
-                {mascota.estado === 'Presente' ? (
-                  <TouchableOpacity
-                    style={styles.botonDesaparecido}
-                    onPress={() => handleReportarDesaparecido(mascota.id)}
-                  >
-                    <Text style={styles.botonTexto}>Reportar como desaparecido</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.botonEncontrado}
-                    onPress={() => handleReportarEncontrado(mascota.id)}
-                  >
-                    <Text style={styles.botonTexto}>Reportar como encontrado</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+        <ScrollView style={styles.container}>
+          <Text style={styles.titulo}>Mis Mascotas registradas</Text>
+          
+          {/* Group pets by type/status for better organization */}
+          {mascotas.length > 0 ? (
+            <View style={styles.verticalContainer}>
+              {mascotas.map((mascota) => (
+                <View key={mascota.id} style={[
+                  styles.verticalBox, 
+                  { borderLeftWidth: 5, borderLeftColor: getPetTypeColor(mascota) }
+                ]}>
+                  <Image style={styles.imageVertical} source={{ uri: mascota.imagen }} />
+                  <View style={styles.verticalTextContainer}>
+                    {editingId === mascota.id ? (
+                      // Editing mode
+                      <>
+                        <TextInput
+                          style={styles.editInput}
+                          value={editData.nombre}
+                          onChangeText={(text) => handleEditChange('nombre', text)}
+                          placeholder="Nombre"
+                        />
+                        <TextInput
+                          style={styles.editInput}
+                          value={editData.edad}
+                          onChangeText={(text) => handleEditChange('edad', text)}
+                          placeholder="Edad"
+                        />
+                        <TextInput
+                          style={styles.editInput}
+                          value={editData.raza}
+                          onChangeText={(text) => handleEditChange('raza', text)}
+                          placeholder="Raza"
+                        />
+                        <Text style={styles.verticalDetail}>Estado: {mascota.estado}</Text>
+                        
+                        <View style={styles.editButtonsContainer}>
+                          <TouchableOpacity
+                            style={styles.botonGuardar}
+                            onPress={() => saveEditing(mascota.id)}
+                          >
+                            <Text style={styles.botonTexto}>Guardar</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.botonCancelar}
+                            onPress={cancelEditing}
+                          >
+                            <Text style={styles.botonTexto}>Cancelar</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    ) : (
+                      // View mode
+                      <>
+                        <View style={styles.petHeaderContainer}>
+                          <Text style={styles.verticalName}>{mascota.nombre}</Text>
+                          <Text style={[
+                            styles.petTypeLabel, 
+                            { backgroundColor: getPetTypeColor(mascota) }
+                          ]}>
+                            {getPetTypeLabel(mascota)}
+                          </Text>
+                        </View>
+                        
+                        <Text style={styles.verticalDetail}>Edad: {mascota.edad}</Text>
+                        <Text style={styles.verticalDetail}>Raza: {mascota.raza}</Text>
+                        <Text style={styles.verticalDetail}>Estado: {mascota.estado}</Text>
+                        
+                        {/* Only show status change buttons for user's own pets */}
+                        {mascota.tipoRegistro === 'perdida' && (
+                          <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                              style={styles.botonEditar}
+                              onPress={() => startEditing(mascota)}
+                            >
+                              <Text style={styles.botonTexto}>Editar Datos</Text>
+                            </TouchableOpacity>
+                            
+                            {mascota.estado === 'Presente' ? (
+                              <TouchableOpacity
+                                style={styles.botonDesaparecido}
+                                onPress={() => handleReportarDesaparecido(mascota.id)}
+                              >
+                                <Text style={styles.botonTexto}>Reportar como desaparecido</Text>
+                              </TouchableOpacity>
+                            ) : (
+                              <TouchableOpacity
+                                style={styles.botonEncontrado}
+                                onPress={() => handleReportarEncontrado(mascota.id)}
+                              >
+                                <Text style={styles.botonTexto}>Reportar como encontrado</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
+          ) : (
+            <Text style={styles.noMascotasText}>
+              No hay mascotas registradas todavía.
+            </Text>
+          )}
         </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -97,7 +224,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-    padding: 20,
   },
   titulo: {
     fontSize: 22,
@@ -159,6 +285,69 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
   },
+  buttonRow: {
+    flexDirection: 'column',
+    marginTop: 10,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    fontSize: 14,
+  },
+  editButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  botonEditar: {
+    backgroundColor: '#8e7b85',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  botonGuardar: {
+    backgroundColor: '#32CD32',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 5,
+    alignItems: 'center',
+  },
+  botonCancelar: {
+    backgroundColor: '#777',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 5,
+    alignItems: 'center',
+  },
+  petHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  petTypeLabel: {
+    fontSize: 12,
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    fontWeight: 'bold',
+  },
+  noMascotasText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    margin: 20,
+    fontStyle: 'italic',
+  },
 });
 
-export default Home;
+export default MisMascotas;
