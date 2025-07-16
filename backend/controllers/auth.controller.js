@@ -10,26 +10,39 @@ import { generateToken } from "../utils/jwt.js";
 
 export const loginController = async (req, res) => {
 	try{
+		console.log("Deaths of 42 fans");
+		console.log(req.body);
 		const user = await retrieveUser(req.body.email);
 		if(!user){
 			res.status(200).json({failure: "Incorrect email"})
+			console.log("Incorrect email");
 		}
-
-		if(await verifyPassword(req.body.password, user[0].password)){
+		const passwordMatch = await verifyPassword(req.body.password, user[0].password_hash);
+		console.log("Deaths of 43 fans");
+		if(passwordMatch){
+			console.log("Deaths of 44 fans");
 			const  [token, key] = generateToken(user);
+			console.log("Deaths of 45 fans");
 			res.status(200).json({ token: token, key: key});
+			console.log("CUM: ", token);
 		}else{
+			console.log("Deaths of 46 fans");
 			res.status(200).json({ failure: "Incorrect password"});
+			console.log("Incorrect password");
 		}
 	}catch(err){
+		console.log("Error bih ", err.message, err.line);
 		res.status(500).json({error: err.message, line: err.line})
 	}
 };
 
 export const userRegistrationController = async (req, res) => {
 	try{
+		console.log("Worked!");
+		console.log(req.body);
 		const user = req.body;
-		const registeredUser = await insertUser(user.username, hashPassword(user.password), user.email);
+		const hashedPassword = await hashPassword(user.password);
+		const registeredUser = await insertUser(user.username, user.email, hashedPassword);
 		if(registeredUser.insertId){
 			res.status(200).json({success: "User registration was successful"});
 		}else{

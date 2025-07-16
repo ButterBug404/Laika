@@ -1,5 +1,4 @@
-import pkg from 'argon2';
-const { argon2 } = pkg;
+import * as argon2 from 'argon2';
 
 export async function hashPassword(password){
 	try{

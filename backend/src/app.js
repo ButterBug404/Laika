@@ -14,9 +14,8 @@ app.use(express.json({ limit: '10mb'}));
 
 async function loadModel() {
 	const modelPath = path.join(__dirname, '../model', 'model.json');
-	model = await tf.loadLayersModel(`file://${modelPath}`);
+	let model = await tf.loadLayersModel(`file://${modelPath}`);
 }
 loadModel();
 
-app.use('/api/login', authRouter);
-app.use('/api/register', authRouter)
+app.use('/api', authRouter);

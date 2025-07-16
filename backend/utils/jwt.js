@@ -10,6 +10,10 @@ const publicKeyPath = path.join(__dirname, '../keys/public.key')
 export function generateToken(user, expiration = 1){
 	const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 	const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-	const token = jwt.sign(user, privateKey, {algorithm: 'RS256', expiresIn: expiration+"h"})
+	console.log("PENE3")
+	const token = jwt.sign(user[0], privateKey, 
+		{algorithm: 'RS256', expiresIn: expiration+"h"}
+	)
+	console.log("PENE4")
 	return [token, publicKey];
 }
