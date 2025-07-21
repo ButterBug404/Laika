@@ -1,25 +1,25 @@
 {
   "expo": {
-    "name": "laika---modular",
-    "slug": "snack-f277ea99-79f3-433e-80c3-25f9195d40cd",
+    "name": "Laika",
+    "slug": "laika-proyecto-modular",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "package": "com.laika.proyectomodular",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FFFFFF"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "com.laika.proyectomodular"
     },
     "web": {
       "favicon": "./assets/favicon.png"

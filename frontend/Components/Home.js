@@ -12,18 +12,23 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useUser } from './UserContext';
 
 const { width: windowWidth } = Dimensions.get('window');
 
 const Home = () => {
   const navigation = useNavigation();
+  const { userProfile, getFullName } = useUser();
+  const colorIcon = "#000000"
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0); // Track the current image index
+  const icons_home_size = 40; // Variable para el tamaño de los iconos
   const images = [
-    'https://cdn.dribbble.com/userupload/31327514/file/original-d1987ba9dd857296cec6d191af277cf8.jpg?resize=1504x1128&vertical=center',
     'https://placehold.co/600x400.png',
-    'https://cdn.dribbble.com/userupload/16493537/file/original-1fa9e0ee297c3dac63716aacad2ef3c2.jpg?resize=1504x1128&vertical=center',
-    'https://cdn.dribbble.com/userupload/5227491/file/original-876bccc45bcc26f66335323dfef3fc37.png?resize=752x564&vertical=center',
+    'https://placehold.co/600x400.png',
+    'https://placehold.co/600x400.png',
+    'https://placehold.co/600x400.png',
   ];
 
   const scrollViewRef = useRef(null); // Ref for the ScrollView
@@ -81,11 +86,19 @@ const Home = () => {
     <SafeAreaProvider>
       <SafeAreaView style={styles.containerHome}>
         <ScrollView>
+          {/* User Profile Section */}
+          <View style={styles.welcomeSection}>
+            <Image 
+              source={{ uri: userProfile.profileImage }} 
+              style={styles.profileImageHome} 
+            />
+            <View style={styles.welcomeTextContainer}>
+              <Text style={styles.titleHome}>Bienvenido</Text>
+              <Text style={styles.userNameHome}>{userProfile.nombre}</Text>
+            </View>
+          </View>
+
           {/* Carrusel */}
-          <Text style={styles.titleHome}>Bienvenidos</Text>
-          <Text style={styles.textoHome}>
-            Laika es un proyecto hecho por voluntarios, para informar, prevenir y ayuda de encontrar mascotas perdidas o que necesitan un hogar.
-          </Text>
           <View style={styles.scrollContainerHome}>
             <ScrollView
               ref={scrollViewRef} // Attach the ref here
@@ -99,15 +112,20 @@ const Home = () => {
               scrollEventThrottle={1}
 
             >
-              {images.map((image, index) => (
-                <View key={index} style={{ width: windowWidth, height: 300 }}>
-                  <Animated.Image
-                    source={{ uri: image }}
-                    style={styles.imageHome}
-                    resizeMode="cover"
-                  />
-                </View>
-              ))}
+              {images.map((image, index) => {
+                const anuncioScreens = ['Anuncio1', 'Anuncio2', 'Anuncio3', 'Anuncio4'];
+                return (
+                  <View key={index} style={styles.imageContainerHome}>
+                    <TouchableOpacity onPress={() => navigation.navigate(anuncioScreens[index])}>
+                      <Animated.Image
+                        source={{ uri: image }}
+                        style={styles.imageHome}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
             </ScrollView>
             <View style={styles.indicatorContainerHome}>
               {images.map((_, index) => {
@@ -134,20 +152,62 @@ const Home = () => {
             </View>
           </View>
 
-          {/* Sección de adopciones */}
-          <Text style={styles.title2Home}>Adopciones</Text>
+          <Text style={styles.textoHome}>
+            Laika es un proyecto hecho por voluntarios, para informar, prevenir y ayuda de encontrar mascotas perdidas o que necesitan un hogar.
+          </Text>
+
+          {/* Botón para ver lista de anuncios */}
+          <TouchableOpacity 
+            style={styles.anunciosButtonHome}
+            onPress={() => navigation.navigate('Lista')}
+          >
+            <Text style={styles.anunciosButtonTextHome}>Ver Todos los Anuncios</Text>
+          </TouchableOpacity>
+
+          {/* Sección de navegación principal */}
+          <Text style={styles.title2Home}>Navegación</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.adopcionScrollHome}>
-            <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Mascotas')}>
               <View style={styles.boxHome}>
-                <Image
-                  style={styles.imageboxHome}
-                  source={require('../assets/GatoIcon.png')}
-                />
-                <Text style={styles.cardTextHome}>Gatos</Text>
+                <Ionicons name="paw-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Mascotas</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Registrar')}>
+              <View style={styles.boxHome}>
+                <Ionicons name="add-circle-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Registrar</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Lista')}>
+              <View style={styles.boxHome}>
+                <Ionicons name="newspaper-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Anuncios</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
+              <View style={styles.boxHome}>
+                <Ionicons name="heart-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Adopción</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+              <View style={styles.boxHome}>
+                <Ionicons name="person-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Perfil</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+
+          {/* Sección de adopciones */}
+          <Text style={styles.title2Home}>Adopciones</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.adopcionScrollHome}>
+            <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'perro' })}>
               <View style={styles.boxHome}>
                 <Image
                   style={styles.imageboxHome}
@@ -157,7 +217,17 @@ const Home = () => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'gato' })}>
+              <View style={styles.boxHome}>
+                <Image
+                  style={styles.imageboxHome}
+                  source={require('../assets/GatoIcon.png')}
+                />
+                <Text style={styles.cardTextHome}>Gatos</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'conejo' })}>
               <View style={styles.boxHome}>
                 <Image
                   style={styles.imageboxHome}
@@ -167,7 +237,7 @@ const Home = () => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'ave' })}>
               <View style={styles.boxHome}>
                 <Image
                   style={styles.imageboxHome}
@@ -181,33 +251,61 @@ const Home = () => {
           {/* Sección de patrocinadores */}
           <Text style={styles.title2Home}>Patrocinadores</Text>
           <View style={styles.patrocinadoresContainerHome}>
-            <Text style={styles.patrocinadoresTextHome}>Patrocinador 1</Text>
-<TouchableOpacity onPress={() => Linking.openURL('https://www.facebook.com/people/VeteriDoocs/100063755374822/?mibextid=LQQJ4d')}>
-  <View style={styles.boxHome}>
-                <Image
-                  style={styles.imagePatrocinador}
-                  source={{ uri: 'https://placehold.co/400x400.png' }}
-                />
+            
+            {/* Primera fila de patrocinadores */}
+            <View style={styles.filaPatrocinadoresHome}>
+              <View style={styles.patrocinadorHome}>
+                <Text style={styles.patrocinadoresTextHome}>VeteriDoc's</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.facebook.com/people/VeteriDoocs/100063755374822/?mibextid=LQQJ4d')}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imagePatrocinador}
+                      source={{ uri: 'https://scontent.fgdl5-4.fna.fbcdn.net/v/t39.30808-6/347241556_1066020577691416_3857840419303509910_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=lBqBKYJ5UEYQ7kNvwGe7-2T&_nc_oc=AdnSODeescpsx9wrJKHgv9TxqphH-DRPW4yaYgojHlalLa0lbkBph3kui1oYtjsg1KlI6m9bfeWJtciw_AU5dgKF&_nc_zt=23&_nc_ht=scontent.fgdl5-4.fna&_nc_gid=P3I-Q2hf19DplvxajIWYkw&oh=00_AfSycZlj5BQk6_bJXAVRuT687gxG4xNpYlrBVvu6rpplNQ&oe=687B0466' }}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-            <Text style={styles.patrocinadoresTextHome}>Patrocinador 2</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
-              <View style={styles.boxHome}>
-                <Image
-                  style={styles.imagePatrocinador}
-                  source={{ uri: 'https://imgs.search.brave.com/5aUe1OqAMSQUntmkHF4m5nnluOnlvGyzulHcL4_y6wo/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMud2l4c3RhdGlj/LmNvbS9tZWRpYS9l/NGMzOThfZGFmOGQy/MjM2ZjdjNGMzY2Jm/OGVkZDAwOWZmYjZi/Y2R-bXYyLnBuZy92/MS9jcm9wL3hfMCx5/XzQsd18zMDAsaF8x/NjEvZmlsbC93XzI1/NixoXzE0MSxhbF9j/LHFfODUsdXNtXzAu/NjZfMS4wMF8wLjAx/LGVuY19hdmlmLHF1/YWxpdHlfYXV0by9u/dXBlYy1sb2dvLUNB/MEJBMkVFOTYtc2Vl/a2xvZ29fY29tLnBu/Zw' }}
-                />
+
+              <View style={styles.patrocinadorHome}>
+                <Text style={styles.patrocinadoresTextHome}>Nupec</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://nupec.com/home-en/')}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imagePatrocinador}
+                      source={{ uri: 'https://imgs.search.brave.com/5aUe1OqAMSQUntmkHF4m5nnluOnlvGyzulHcL4_y6wo/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMud2l4c3RhdGlj/LmNvbS9tZWRpYS9l/NGMzOThfZGFmOGQy/MjM2ZjdjNGMzY2Jm/OGVkZDAwOWZmYjZi/Y2R-bXYyLnBuZy92/MS9jcm9wL3hfMCx5/XzQsd18zMDAsaF8x/NjEvZmlsbC93XzI1/NixoXzE0MSxhbF9j/LHFfODUsdXNtXzAu/NjZfMS4wMF8wLjAx/LGVuY19hdmlmLHF1/YWxpdHlfYXV0by9u/dXBlYy1sb2dvLUNB/MEJBMkVFOTYtc2Vl/a2xvZ29fY29tLnBu/Zw' }}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-            <Text style={styles.patrocinadoresTextHome}>Patrocinador 3</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Adopción')}>
-              <View style={styles.boxHome}>
-                <Image
-                  style={styles.imagePatrocinador}
-                  source={{ uri: 'https://www.adopta.mx/wp-content/uploads/2018/07/adopta-logo2017-270x90.png' }}
-                />
+            </View>
+
+            {/* Segunda fila de patrocinadores */}
+            <View style={styles.filaPatrocinadoresHome}>
+              <View style={styles.patrocinadorHome}>
+                <Text style={styles.patrocinadoresTextHome}>Adopta GDL</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.adopta.mx/')}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imagePatrocinador}
+                      source={{ uri: 'https://www.adopta.mx/wp-content/uploads/2018/07/adopta-logo2017-270x90.png' }}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+
+              <View style={styles.patrocinadorHome}>
+                <Text style={styles.patrocinadoresTextHome}>Adopta un amigo</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://adoptandounamigo.mx/')}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imagePatrocinador}
+                      source={{ uri: 'https://adoptandounamigo.mx/wp-content/uploads/2023/08/Alogosinfondo.png' }}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -221,8 +319,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   scrollContainerHome: {
-    height: 250,
+    height: windowWidth * 0.67, // Responsive height based on 600x400 aspect ratio
     overflow: 'hidden',
+    marginBottom: 10,
+  },
+  imageContainerHome: {
+    width: windowWidth,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
   },
   textoHome: {
     textAlign: 'center',
@@ -236,18 +342,37 @@ const styles = StyleSheet.create({
     marginTop: 10, // Añadir un margen superior para separar del título
     marginHorizontal: 20, // Añadir un margen horizontal para que no toque los bordes
     paddingHorizontal: 10, // Añadir un padding horizontal para que el texto no toque los bordes
-    fontStyle: 'italic', // Estilo de fuente en cursiva
     textTransform: 'capitalize', // Capitalizar la primera letra de cada palabra
 
   },
+  welcomeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  profileImageHome: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#e07978',
+    marginRight: 15,
+  },
+  welcomeTextContainer: {
+    flex: 1,
+  },
   titleHome: {
     fontWeight: 'bold',
-    marginTop: 10,
-    fontSize: 36,
-    textAlign: 'center',
-    color: '#843947',
-    textAlign: 'center',
+    fontSize: 25,
+    color: '#000000ff',
     fontFamily: 'sans-serif',
+    marginBottom: 5,
+  },
+  userNameHome: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: '600',
   },
   title2Home: {
     marginTop: 20,
@@ -257,17 +382,18 @@ const styles = StyleSheet.create({
     color: '#843947',
   },
   imageHome: {
-    width: windowWidth,
-    height: '80%',
+    width: windowWidth * 0.95, // 95% of screen width with padding
+    height: (windowWidth * 0.95) * (400/600), // Maintain 600x400 aspect ratio
+    borderRadius: 12,
   },
   imageboxHome: {
     width: 150,
     height: 150,
     borderRadius: 12,
-    marginBottom: 10,
-    backgroundColor: 'white',
-    resizeMode: 'cover', // Mostrar la imagen completa respetando su relación de aspecto
-    
+    marginBottom: 15,
+    resizeMode: 'contain',
+    borderWidth: 2.5,
+    borderColor: '#843947',
   },
   imagePatrocinador: {
   width: 150,
@@ -287,7 +413,7 @@ const styles = StyleSheet.create({
   cardTextHome: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#af4f52',
+    color: '#000',
   },
   indicatorContainerHome: {
     flexDirection: 'row',
@@ -333,12 +459,55 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     paddingHorizontal: 10,
   },
+  filaPatrocinadoresHome: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  patrocinadorHome: {
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  boxPatrocinadorHome: {
+    alignItems: 'center',
+  },
   patrocinadoresTextHome: {
     fontSize: 18,
     color: '#8f7b86',
     textAlign: 'center',
     marginVertical: 5,
     fontWeight: 'bold',
+  },
+  anunciosButtonHome: {
+    backgroundColor: '#000000ff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  anunciosButtonTextHome: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  navigationIconHome: {
+    marginBottom: 10,
+    backgroundColor: 'white',
+    borderRadius: 75,
+    padding: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 });
 
