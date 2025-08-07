@@ -18,15 +18,10 @@ export const loginController = async (req, res) => {
 			console.log("Incorrect email");
 		}
 		const passwordMatch = await verifyPassword(req.body.password, user[0].password_hash);
-		console.log("Deaths of 43 fans");
 		if(passwordMatch){
-			console.log("Deaths of 44 fans");
-			const  [token, key] = generateToken(user);
-			console.log("Deaths of 45 fans");
-			res.status(200).json({ token: token, key: key});
-			console.log("CUM: ", token);
+			const  [token] = generateToken(user);
+			res.status(200).json({ token: token});
 		}else{
-			console.log("Deaths of 46 fans");
 			res.status(200).json({ failure: "Incorrect password"});
 			console.log("Incorrect password");
 		}
