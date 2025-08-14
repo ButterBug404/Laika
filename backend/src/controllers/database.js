@@ -23,17 +23,12 @@ export async function retrieveUser(email) {
 	}
 }
 
-export async function insertUser(username, email, password_hash){
+export async function insertUser(user){
 	let conn;
 	try{
 		conn = await pool.getConnection();
-		console.log("I got");
-		console.log(username);
-		console.log(email);
-		console.log(password_hash);
-		const query = "INSERT INTO laika_users (username, password_hash, email) VALUES (?, ?, ?)";
-		const rows = await conn.query(query, [username, password_hash, email]);
-		console.log("User ", rows.inserted, " inserted");
+		const query = "INSERT INTO laika_users (username, password_hash, email, state, municipality) VALUES (?, ?, ?, ?, ?)";
+		const rows = await conn.query(query, [user.username, user.password_hash, user.email, user.state, user.municipality]);
 	}catch(err){
 		console.log("Error at inesrtUser, ", err)
 	}finally{

@@ -4,7 +4,7 @@ import * as tf from '@tensorflow/tfjs-node';
 import path from 'path';
 import { fileURLToPath } from 'url';
 //Local packages
-import { authRouter } from '../routes/auth.routes.js';
+import { authRouter } from './routes/auth.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

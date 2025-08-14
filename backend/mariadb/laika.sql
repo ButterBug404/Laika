@@ -5,8 +5,10 @@ SET time_zone = "+00:00";
 CREATE TABLE `laika_users` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(150) NOT NULL,
-  `password_hash` VARCHAR(255) NOT NULL, -- changed from CHAR(60)
+  `password_hash` VARCHAR(255) NOT NULL,
   `email` VARCHAR(254) NOT NULL,
+  `state` VARCHAR(100) NOT NULL,
+  `municipality` VARCHAR(100) NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_username` (`username`),
@@ -20,7 +22,7 @@ CREATE TABLE `pets` (
   `species` ENUM('DOG','CAT') NOT NULL,
   `breed` VARCHAR(80),
   `color` VARCHAR(60) NOT NULL,
-  `age` TINYINT UNSIGNED NOT NULL, -- pets won’t be 300yo
+  `age` TINYINT UNSIGNED NOT NULL,
   `sex` ENUM('MALE','FEMALE') NOT NULL,
   `size` ENUM('SMALL','MEDIUM','LARGE') NOT NULL,
   `markings` VARCHAR(280) NOT NULL,
@@ -35,7 +37,7 @@ CREATE TABLE `missing_alerts` (
   `pet_id` INT NOT NULL,
   `time` DATETIME NOT NULL,
   `location` POINT NOT NULL,
-  `circumstances` VARCHAR(280) NOT NULL, -- typo fixed
+  `circumstances` VARCHAR(280) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_missing_alerts_user_id` (`user_id`),
   KEY `fk_missing_alerts_pet_id` (`pet_id`),

@@ -34,11 +34,16 @@ export const loginController = async (req, res) => {
 export const userRegistrationController = async (req, res) => {
 	try{
 		console.log("Worked!");
-		console.log(req.body);
 		const user = req.body;
 		const hashedPassword = await hashPassword(user.password);
-		const registeredUser = await insertUser(user.username, user.email, hashedPassword);
-		if(registeredUser.insertId){
+		const { password, ...userNoPass} = user
+		const newUser = {
+			...userNoPass,
+			password_hash: hashedPassword,
+		}
+		console.log(newUser);
+		const registeredUser = await insertUser(newUser);
+		if(registeredUser != undefined){
 			res.status(200).json({success: "User registration was successful"});
 		}else{
 			res.status(200).json({failure: "Something went wrong when registering a new user"})

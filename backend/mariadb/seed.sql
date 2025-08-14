@@ -1,22 +1,7 @@
 START TRANSACTION;
 
 -- Users
-INSERT INTO `laika_users` (`username`, `password_hash`, `email`) VALUES
-('user1', 'hash1', 'user1@example.com'),
-('user2', 'hash2', 'user2@example.com'),
-('user3', 'hash3', 'user3@example.com'),
-('user4', 'hash4', 'user4@example.com'),
-('user5', 'hash5', 'user5@example.com'),
-('user6', 'hash6', 'user6@example.com'),
-('user7', 'hash7', 'user7@example.com'),
-('user8', 'hash8', 'user8@example.com'),
-('user9', 'hash9', 'user9@example.com'),
-('user10', 'hash10', 'user10@example.com'),
-('user11', 'hash11', 'user11@example.com'),
-('user12', 'hash12', 'user12@example.com'),
-('user13', 'hash13', 'user13@example.com'),
-('user14', 'hash14', 'user14@example.com'),
-('user15', 'hash15', 'user15@example.com');
+-- We don't do that here. Use .curler.sh to insert users.
 
 -- Pets
 INSERT INTO `pets` (`user_id`, `name`, `species`, `breed`, `color`, `age`, `sex`, `size`, `markings`) VALUES
