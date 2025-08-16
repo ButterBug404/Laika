@@ -39,12 +39,265 @@ import Anuncio7 from './Components/Anuncios/Anuncio7.js';
 import Anuncio8 from './Components/Anuncios/Anuncio8.js';
 import Lista_Anuncios from './Components/Anuncios/Lista.js';
 import { UserProvider } from './Components/UserContext';
+import Creditos from './Components/Creditos';
 
 const estados = [
   'Selecciona Estado',
-  'Ciudad de México',
+  'Nuevo León',
   'Estado de México',
   'Jalisco',
+];
+
+const MunicipioNL = [
+  'Selecciona Municipio',
+  'Monterrey',
+  'Guadalupe',
+  'San Nicolás de los Garza',
+  'Escobedo',
+  'Apodaca',
+  'Santa Catarina',
+  'San Pedro Garza García',
+  'Juárez',
+  'Cadereyta Jiménez',
+  'García',
+  'Santiago',
+  'Allende',
+  'Montemorelos',
+  'Linares',
+  'Salinas Victoria',
+  'Ciénega de Flores',
+  'Pesquería',
+  'El Carmen',
+  'Hidalgo',
+  'Abasolo',
+  'Sabinas Hidalgo',
+  'Aramberri',
+  'Cerralvo',
+  'China',
+  'Doctor Arroyo',
+  'Galeana',
+  'General Bravo',
+  'General Escobedo',
+  'General Terán',
+  'General Treviño',
+  'General Zaragoza',
+  'General Zuazua',
+  'Hualaulises',
+  'Iturbide',
+  'Lampazos de Naranjo',
+  'Los Aldamas',
+  'Los Herreras',
+  'Los Ramones',
+  'Marín',
+  'Melchor Ocampo',
+  'Mier y Noriega',
+  'Mina',
+  'Parás',
+  'Rayones',
+  'Villaldama'
+];
+
+const MunicipioJAL = [
+  'Selecciona Municipio',
+  'Guadalajara',
+  'Zapopan',
+  'Tlaquepaque',
+  'Tonalá',
+  'Tlajomulco de Zúñiga',
+  'El Salto',
+  'Puerto Vallarta',
+  'Chapala',
+  'Lagos de Moreno',
+  'Tepatitlán de Morelos',
+  'Ocotlán',
+  'Arandas',
+  'La Barca',
+  'Ameca',
+  'Autlán de Navarro',
+  'Colotlán',
+  'Encarnación de Díaz',
+  'Jamay',
+  'Jocotepec',
+  'Magdalena',
+  'San Juan de los Lagos',
+  'Tala',
+  'Tequila',
+  'Zacoalco de Torres',
+  'Acatic',
+  'Acatlán de Juárez',
+  'Ahualulco de Mercado',
+  'Amatitán',
+  'Atotonilco el Alto',
+  'Ayotlán',
+  'Bolaños',
+  'Cabo Corrientes',
+  'Casimiro Castillo',
+  'Cihuatlán',
+  'Cocula',
+  'Cuautitlán de García Barragán',
+  'Cuautla',
+  'Cuquío',
+  'Degollado',
+  'Ejutla',
+  'El Arenal',
+  'El Grullo',
+  'El Limón',
+  'Etzatlán',
+  'Gómez Farías',
+  'Guachinango',
+  'Hostotipaquillo',
+  'Huejúcar',
+  'Huejuquilla el Alto',
+  'Ixtlahuacán de los Membrillos',
+  'Ixtlahuacán del Río',
+  'Jalostotitlán',
+  'Jamay',
+  'Jesús María',
+  'Jilotlán de los Dolores',
+  'La Huerta',
+  'Mascota',
+  'Mazamitla',
+  'Mexticacán',
+  'Mezquitic',
+  'Mixtlán',
+  'Ojuelos de Jalisco',
+  'Pihuamo',
+  'Poncitlán',
+  'Quitupan',
+  'San Cristóbal de la Barranca',
+  'San Diego de Alejandría',
+  'San Ignacio Cerro Gordo',
+  'San Juanito de Escobedo',
+  'San Julián',
+  'San Marcos',
+  'San Martín de Bolaños',
+  'San Martín Hidalgo',
+  'San Miguel el Alto',
+  'San Sebastián del Oeste',
+  'Santa María de los Ángeles',
+  'Santa María del Oro',
+  'Sayula',
+  'Tamazula de Gordiano',
+  'Tapalpa',
+  'Tecalitlán',
+  'Techaluta de Montenegro',
+  'Tecolotlán',
+  'Tenamaxtlán',
+  'Teocaltiche',
+  'Teocuitatlán de Corona',
+  'Teuchitlán',
+  'Tizapán el Alto',
+  'Tolimán',
+  'Tomatlán',
+  'Totatiche',
+  'Tototlán',
+  'Tuxcacuesco',
+  'Tuxcueca',
+  'Tuxpan',
+  'Unión de San Antonio',
+  'Unión de Tula',
+  'Valle de Guadalupe',
+  'Valle de Juárez',
+  'Villa Corona',
+  'Villa Guerrero',
+  'Villa Hidalgo',
+  'Villa Purificación',
+  'Yahualica de González Gallo',
+  'Zacoalco de Torres',
+  'Zapotiltic',
+  'Zapotitlán de Vadillo',
+  'Zapotlán del Rey',
+  'Zapotlán el Grande',
+  'Zapotlanejo'
+];
+
+const MunicipioEDOMEX = [
+  'Selecciona Municipio',
+  'Ecatepec de Morelos',
+  'Nezahualcóyotl',
+  'Naucalpan de Juárez',
+  'Tlalnepantla de Baz',
+  'Chimalhuacán',
+  'Ixtapaluca',
+  'Atizapán de Zaragoza',
+  'Cuautitlán Izcalli',
+  'Tultitlán',
+  'Coacalco de Berriozábal',
+  'Chalco',
+  'La Paz',
+  'Valle de Chalco Solidaridad',
+  'Nicolás Romero',
+  'Tecámac',
+  'Huixquilucan',
+  'Texcoco',
+  'Los Reyes La Paz',
+  'Chicoloapan',
+  'Zumpango',
+  'Lerma',
+  'Metepec',
+  'Cuautitlán',
+  'Tepotzotlán',
+  'Toluca',
+  'Ixtapan de la Sal',
+  'Tenancingo',
+  'Villa del Carbón',
+  'Teoloyucan',
+  'Melchor Ocampo',
+  'Temamatla',
+  'Nextlalpan',
+  'San Martín de las Pirámides',
+  'Acolman',
+  'Atenco',
+  'Chiautla',
+  'Chiconcuac',
+  'Papalotla',
+  'Tepetlaoxtoc',
+  'Tepetlixpa',
+  'Tequixquiac',
+  'Texcalyacac',
+  'Tonanitla',
+  'Tezoyuca',
+  'Otumba',
+  'Axapusco',
+  'Nopaltepec',
+  'San Andrés Chiautla',
+  'Temascalapa',
+  'Villa del Carbón',
+  'Huehuetoca',
+  'Isidro Fabela',
+  'Jilotzingo',
+  'Jiquipilco',
+  'Jocotitlán',
+  'Joquicingo',
+  'Juchitepec',
+  'Malinalco',
+  'Morelos',
+  'Ocoyoacac',
+  'Ocuilan',
+  'El Oro',
+  'Otzolotepec',
+  'Ozumba',
+  'Rayón',
+  'San Antonio la Isla',
+  'San Mateo Atenco',
+  'Sultepec',
+  'Tejupilco',
+  'Temoaya',
+  'Tenango del Aire',
+  'Tenango del Valle',
+  'Tianguistenco',
+  'Timilpan',
+  'Tlalmanalco',
+  'Tlatlaya',
+  'Tonatico',
+  'Villa de Allende',
+  'Villa Guerrero',
+  'Xalatlaco',
+  'Xonacatlán',
+  'Zacazonapan',
+  'Zacualpan',
+  'Zinacantepec',
+  'Zumpahuacán'
 ];
 
 const Tab = createBottomTabNavigator();
@@ -138,6 +391,15 @@ const HomeStack = () => (
         headerTintColor: '#f6d3c3',
       }}
     />
+    <Stack.Screen
+      name="Creditos"
+      component={Creditos}
+      options={{
+        title: 'Créditos',
+        headerStyle: { backgroundColor: '#b04f4f' },
+        headerTintColor: '#f6d3c3',
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -152,6 +414,7 @@ const PerfilScreen = ({ setIsLoggedIn }) => (
 
 const App = () => {
   const [selectedEstado, setSelectedEstado] = useState('');
+  const [selectedMunicipio, setSelectedMunicipio] = useState('Selecciona Municipio');
   const [isSignUp, setIsSignUp] = useState(false); // Alternar entre inicio y registro
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado para manejar el login
   const [correo, setCorreo] = useState('');
@@ -169,6 +432,20 @@ const App = () => {
     return passwordPattern.test(password);
   };
 
+  // Function to get municipalities based on selected state
+  const getMunicipiosByEstado = (estado) => {
+    switch (estado) {
+      case 'Nuevo León':
+        return MunicipioNL;
+      case 'Estado de México':
+        return MunicipioEDOMEX;
+      case 'Jalisco':
+        return MunicipioJAL;
+      default:
+        return ['Selecciona Municipio'];
+    }
+  };
+
   const handleRegister = () => {
     if (
       !correo ||
@@ -177,7 +454,10 @@ const App = () => {
       !apellidoPaterno ||
       !apellidoMaterno ||
       !telefono ||
-      selectedEstado === 'Selecciona Estado'
+      selectedEstado === 'Selecciona Estado' ||
+      selectedMunicipio === 'Selecciona Municipio' ||
+      !selectedEstado ||
+      !selectedMunicipio
     ) {
       Alert.alert(
         'Error',
@@ -200,6 +480,7 @@ const App = () => {
       setApellidoMaterno('');
       setTelefono('');
       setSelectedEstado('Selecciona Estado');
+      setSelectedMunicipio('Selecciona Municipio');
       setPasswordError('');
     }
   };
@@ -304,9 +585,10 @@ const App = () => {
                         <Picker
                           selectedValue={selectedEstado}
                           style={styles.picker}
-                          onValueChange={(itemValue) =>
-                            setSelectedEstado(itemValue)
-                          }>
+                          onValueChange={(itemValue) => {
+                            setSelectedEstado(itemValue);
+                            setSelectedMunicipio('Selecciona Municipio'); // Reset municipality when state changes
+                          }}>
                           {estados.map((estado, index) => (
                             <Picker.Item
                               key={index}
@@ -315,6 +597,22 @@ const App = () => {
                             />
                           ))}
                         </Picker>
+                        {selectedEstado && selectedEstado !== 'Selecciona Estado' && (
+                          <Picker
+                            selectedValue={selectedMunicipio}
+                            style={styles.picker}
+                            onValueChange={(itemValue) =>
+                              setSelectedMunicipio(itemValue)
+                            }>
+                            {getMunicipiosByEstado(selectedEstado).map((municipio, index) => (
+                              <Picker.Item
+                                key={index}
+                                label={municipio}
+                                value={municipio}
+                              />
+                            ))}
+                          </Picker>
+                        )}
                       </>
                     )}
                     {!isSignUp && (

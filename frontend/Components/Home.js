@@ -196,6 +196,13 @@ const Home = () => {
               </View>
             </TouchableOpacity>
 
+            <TouchableOpacity onPress={() => navigation.navigate('Creditos')}>
+              <View style={styles.boxHome}>
+                <Ionicons name="people-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
+                <Text style={styles.cardTextHome}>Créditos</Text>
+              </View>
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
               <View style={styles.boxHome}>
                 <Ionicons name="person-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />

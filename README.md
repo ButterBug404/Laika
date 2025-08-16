@@ -14,7 +14,6 @@
 ## Autores
 
 - [@DavidUGH](https://www.github.com/DavidUGH)
-- [@DavidUGH](https://www.github.com/DavidUGH)
 - [@ButterBug404](https://www.github.com/ButterBug404)
 
 
