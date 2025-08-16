@@ -18,15 +18,10 @@ export const loginController = async (req, res) => {
 			console.log("Incorrect email");
 		}
 		const passwordMatch = await verifyPassword(req.body.password, user[0].password_hash);
-		console.log("Deaths of 43 fans");
 		if(passwordMatch){
-			console.log("Deaths of 44 fans");
-			const  [token, key] = generateToken(user);
-			console.log("Deaths of 45 fans");
-			res.status(200).json({ token: token, key: key});
-			console.log("CUM: ", token);
+			const  [token] = generateToken(user);
+			res.status(200).json({ token: token});
 		}else{
-			console.log("Deaths of 46 fans");
 			res.status(200).json({ failure: "Incorrect password"});
 			console.log("Incorrect password");
 		}
@@ -39,11 +34,16 @@ export const loginController = async (req, res) => {
 export const userRegistrationController = async (req, res) => {
 	try{
 		console.log("Worked!");
-		console.log(req.body);
 		const user = req.body;
 		const hashedPassword = await hashPassword(user.password);
-		const registeredUser = await insertUser(user.username, user.email, hashedPassword);
-		if(registeredUser.insertId){
+		const { password, ...userNoPass} = user
+		const newUser = {
+			...userNoPass,
+			password_hash: hashedPassword,
+		}
+		console.log(newUser);
+		const registeredUser = await insertUser(newUser);
+		if(registeredUser != undefined){
 			res.status(200).json({success: "User registration was successful"});
 		}else{
 			res.status(200).json({failure: "Something went wrong when registering a new user"})
