@@ -6,7 +6,9 @@ En México, una gran cantidad de robos y extravíos de mascotas ocurren cada añ
 
 
 
-<img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="350" alt="Logo">
+<p align="center">
+  <img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="400" style="display: block; margin: 0 auto;" alt="Logo">
+</p>
 
 
 ## Autores
