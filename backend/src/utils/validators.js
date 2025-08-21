@@ -23,6 +23,15 @@ export const passwordValidator = [
 	.isStrongPassword({minLength: 6, minUppercase: 1, minSymbols: 1}).withMessage('Password must contain at least 6 characters, one uppercase character, and one symbol')
 ]
 
+export const textValidator = (fieldName, options = {}) => {
+  const chain = body(fieldName)
+    .optional({ checkFalsy: options.optional ?? true })
+    .isLength({ max: options.max ?? 500 }).withMessage("Text too long")
+    .trim();
+  if (options.escape) chain.escape();
+  return chain;
+};
+
 export function validateRequest(req, res, next){
 	const errors = validationResult(req);
 	if (!errors.isEmpty()){

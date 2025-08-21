@@ -13,3 +13,8 @@ export function generateToken(user, expiration = 1){
 	)
 	return [token];
 }
+
+export function verifyToken(token){
+	const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+	return jwt.verify(token, privateKey);
+}

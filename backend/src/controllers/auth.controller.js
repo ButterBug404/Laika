@@ -9,26 +9,29 @@ import {
 import { generateToken } from "../utils/jwt.js";
 
 export const loginController = async (req, res) => {
-	try{
-		console.log("Deaths of 42 fans");
-		console.log(req.body);
-		const user = await retrieveUser(req.body.email);
-		if(!user){
-			res.status(200).json({failure: "Incorrect email"})
-			console.log("Incorrect email");
-		}
-		const passwordMatch = await verifyPassword(req.body.password, user[0].password_hash);
-		if(passwordMatch){
-			const  [token] = generateToken(user);
-			res.status(200).json({ token: token});
-		}else{
-			res.status(200).json({ failure: "Incorrect password"});
-			console.log("Incorrect password");
-		}
-	}catch(err){
-		console.log("Error bih ", err.message, err.line);
-		res.status(500).json({error: err.message, line: err.line})
-	}
+  try {
+    const { email, password } = req.body;
+
+    const user = await retrieveUser(email);
+    if (!user || user.length === 0) {
+      console.log("Incorrect email");
+      return res.status(400).json({ failure: "Incorrect email" });
+    }
+
+    const passwordMatch = await verifyPassword(password, user[0].password_hash);
+
+    if (!passwordMatch) {
+      console.log("Incorrect password");
+      return res.status(400).json({ failure: "Incorrect password" });
+    }
+
+    const [token] = generateToken(user);
+    return res.status(200).json({ token });
+
+  } catch (err) {
+    console.error("LoginController error", err.message);
+    return res.status(500).json({ error: err.message });
+  }
 };
 
 export const userRegistrationController = async (req, res) => {
