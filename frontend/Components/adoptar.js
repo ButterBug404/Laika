@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, Modal, Pressable, Button, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, Modal, Pressable, Button, ScrollView, Linking, Alert, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
+import { getMascotas } from './MascotasData';
 
 // Replace the function to directly return required local images
 const getImageForAnimal = (especie) => {
@@ -19,222 +20,75 @@ const getImageForAnimal = (especie) => {
   }
 };
 
-// Contactos para mascotas
-const contactos = {
-  // Contactos de empresas (con email)
-  empresas: [
-    { 
-      id: 'e1', 
-      nombre: 'Asociación Amigos Caninos', 
-      telefono: '523326551124', 
-      email: 'contacto@amigoscaninos.org', 
-      tipo: 'asociación' 
-    },
-    { 
-      id: 'e2', 
-      nombre: 'Fundación Felina', 
-      telefono: '525523456789', 
-      email: 'adopciones@fundacionfelina.mx', 
-      tipo: 'asociación' 
-    },
-    { 
-      id: 'e3', 
-      nombre: 'Refugio Pequeñas Patitas', 
-      telefono: '525534567890', 
-      email: 'info@pequeñaspatitas.com', 
-      tipo: 'asociación' 
-    },
-    { 
-      id: 'e4', 
-      nombre: 'Santuario de Aves', 
-      telefono: '525545678901', 
-      email: 'aves@santuariomx.org', 
-      tipo: 'asociación' 
-    }
-  ],
-  
-  // Contactos personales
-  personales: [
-    { id: 'p1', nombre: 'Carlos Martínez - Voluntario', telefono: '525587456321', tipo: 'personal' },
-    { id: 'p2', nombre: 'Ana López - Rescatista', telefono: '525591234567', tipo: 'personal' },
-    { id: 'p3', nombre: 'Miguel Sánchez - Especialista', telefono: '525589012345', tipo: 'personal' },
-    { id: 'p4', nombre: 'Laura Rodríguez - Veterinaria', telefono: '525578901234', tipo: 'personal' }
-  ]
-};
-
-const todasLasMascotas = [
-  // Perros
-  { 
-    id: '1', 
-    nombre: 'Firulais', 
-    edad: '2 años', 
-    raza: 'Golden Retriever', 
-    color: 'Dorado', 
-    tamaño: 'Grande', 
-    vacunado: true, 
-    descripcion: 'Es muy juguetón y le encanta jugar con niños y agua.', 
-    imagen: getImageForAnimal('perro'), 
-    especie: 'perro',
-    contacto: contactos.empresas[0] // Asociación Amigos Caninos
-  },
-  { 
-    id: '2', 
-    nombre: 'Luna', 
-    edad: '1 año', 
-    raza: 'Pastor Alemán', 
-    color: 'Negro y fuego', 
-    tamaño: 'Grande', 
-    vacunado: true, 
-    descripcion: 'Muy inteligente y protectora, ideal para entrenar.', 
-    imagen: getImageForAnimal('perro'), 
-    especie: 'perro',
-    contacto: contactos.personales[0] // Carlos Martínez - Voluntario
-  },
-  { 
-    id: '3', 
-    nombre: 'Max', 
-    edad: '3 años', 
-    raza: 'Labrador', 
-    color: 'Chocolate', 
-    tamaño: 'Grande', 
-    vacunado: false, 
-    descripcion: 'Cariñoso y sociable, le encanta correr y jugar con pelotas.', 
-    imagen: getImageForAnimal('perro'), 
-    especie: 'perro',
-    contacto: contactos.empresas[0] // Asociación Amigos Caninos
-  },
-  { 
-    id: '4', 
-    nombre: 'Nina', 
-    edad: '4 años', 
-    raza: 'Poodle', 
-    color: 'Blanco', 
-    tamaño: 'Mediano', 
-    vacunado: true, 
-    descripcion: 'Tranquila y obediente, ideal para casas pequeñas.', 
-    imagen: getImageForAnimal('perro'), 
-    especie: 'perro',
-    contacto: contactos.personales[0] // Carlos Martínez - Voluntario
-  },
-  
-  // Gatos
-  { 
-    id: '5', 
-    nombre: 'Michi', 
-    edad: '2 años', 
-    raza: 'Siamés', 
-    color: 'Crema y marrón', 
-    tamaño: 'Pequeño', 
-    vacunado: true, 
-    descripcion: 'Juguetón y vocal, le encanta recibir atención y mimos.', 
-    imagen: getImageForAnimal('gato'), 
-    especie: 'gato',
-    contacto: contactos.empresas[1] // Fundación Felina
-  },
-  { 
-    id: '6', 
-    nombre: 'Salem', 
-    edad: '3 años', 
-    raza: 'Negro común', 
-    color: 'Negro', 
-    tamaño: 'Mediano', 
-    vacunado: true, 
-    descripcion: 'Tranquilo y observador, prefiere lugares elevados y cálidos.', 
-    imagen: getImageForAnimal('gato'), 
-    especie: 'gato',
-    contacto: contactos.personales[1] // Ana López - Rescatista
-  },
-  { 
-    id: '7', 
-    nombre: 'Pelusa', 
-    edad: '1 año', 
-    raza: 'Persa', 
-    color: 'Blanco', 
-    tamaño: 'Mediano', 
-    vacunado: false, 
-    descripcion: 'Muy cariñoso y perezoso, adora que lo cepillen.', 
-    imagen: getImageForAnimal('gato'), 
-    especie: 'gato',
-    contacto: contactos.empresas[1] // Fundación Felina
-  },
-  
-  // Conejos
-  { 
-    id: '8', 
-    nombre: 'Tambor', 
-    edad: '1 año', 
-    raza: 'Mini Lop', 
-    color: 'Gris y blanco', 
-    tamaño: 'Pequeño', 
-    vacunado: true, 
-    descripcion: 'Muy activo y curioso, le encanta explorar.', 
-    imagen: getImageForAnimal('conejo'), 
-    especie: 'conejo',
-    contacto: contactos.empresas[2] // Refugio Pequeñas Patitas
-  },
-  { 
-    id: '9', 
-    nombre: 'Copito', 
-    edad: '2 años', 
-    raza: 'Cabeza de león', 
-    color: 'Blanco', 
-    tamaño: 'Pequeño', 
-    vacunado: true, 
-    descripcion: 'Tranquilo y amigable, perfecto para niños.', 
-    imagen: getImageForAnimal('conejo'), 
-    especie: 'conejo',
-    contacto: contactos.personales[2] // Miguel Sánchez - Especialista
-  },
-  
-  // Aves
-  { 
-    id: '10', 
-    nombre: 'Piolín', 
-    edad: '3 años', 
-    raza: 'Canario', 
-    color: 'Amarillo', 
-    tamaño: 'Muy pequeño', 
-    vacunado: false, 
-    descripcion: 'Canta hermoso por las mañanas, alegra cualquier hogar.', 
-    imagen: getImageForAnimal('ave'), 
-    especie: 'ave',
-    contacto: contactos.empresas[3] // Santuario de Aves
-  },
-  { 
-    id: '11', 
-    nombre: 'Pepe', 
-    edad: '1 año', 
-    raza: 'Periquito', 
-    color: 'Verde y azul', 
-    tamaño: 'Pequeño', 
-    vacunado: false, 
-    descripcion: 'Muy sociable, puede aprender a hablar con entrenamiento.', 
-    imagen: getImageForAnimal('ave'), 
-    especie: 'ave',
-    contacto: contactos.personales[3] // Laura Rodríguez - Veterinaria
-  },
-  { 
-    id: '12', 
-    nombre: 'Lola', 
-    edad: '5 años', 
-    raza: 'Loro gris', 
-    color: 'Gris con cola roja', 
-    tamaño: 'Mediano', 
-    vacunado: true, 
-    descripcion: 'Inteligente y habladora, ya sabe varias palabras.', 
-    imagen: getImageForAnimal('ave'), 
-    especie: 'ave',
-    contacto: contactos.empresas[3] // Santuario de Aves
-  },
-];
-
 const Adopta = () => {
   const route = useRoute();
   const [modalVisible, setModalVisible] = useState(false);
   const [contactoModalVisible, setContactoModalVisible] = useState(false);
   const [selectedMascota, setSelectedMascota] = useState(null);
   const [especieSeleccionada, setEspecieSeleccionada] = useState('todas');
+  const [mascotasData, setMascotasData] = useState([]);
+  const [contactosData, setContactosData] = useState({ empresas: [], personales: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
+  // Fetch data from GitHub JSON and combine with local pets
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('https://raw.githubusercontent.com/ButterBug404/ejemplo_de_un_json/refs/heads/main/Dato_adopciones.json');
+        const data = await response.json();
+        
+        // Process the external data to match our application structure
+        const processExternalMascotas = data.mascotas.map(mascota => {
+          // Find the corresponding contact for this pet
+          let contacto;
+          if (mascota.contactoId.startsWith('e')) {
+            contacto = data.contactos.empresas.find(e => e.id === mascota.contactoId);
+          } else {
+            contacto = data.contactos.personales.find(p => p.id === mascota.contactoId);
+          }
+          
+          // Return the mascota with proper structure
+          return {
+            ...mascota,
+            imagen: { uri: mascota.imagen },
+            contacto: contacto,
+            isUserPet: false // Mark as not user's own pet
+          };
+        });
+        
+        // Get user's local pets for adoption - FILTER OUT ADOPTED PETS
+        const userPets = getMascotas().filter(pet => 
+          pet.tipoRegistro === 'adopcion' && pet.estado !== 'Adoptada'
+        );
+        
+        // Process user pets to match structure and mark them as user's own
+        const processedUserPets = userPets.map(pet => ({
+          ...pet,
+          contacto: {
+            tipo: 'personal',
+            nombre: 'Mi contacto',
+            telefono: pet.contacto || 'Contactar através del perfil',
+            // Add default email if needed
+          },
+          isUserPet: true // Mark as user's own pet
+        }));
+        
+        // Combine both sets of pets
+        setMascotasData([...processExternalMascotas, ...processedUserPets]);
+        setContactosData(data.contactos);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load data. Please try again later.');
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
   // Handle navigation parameters
   useEffect(() => {
     if (route.params?.filtroEspecie) {
@@ -242,9 +96,10 @@ const Adopta = () => {
     }
   }, [route.params]);
 
+  // Filter mascotas based on selected species
   const mascotasFiltradas = especieSeleccionada === 'todas'
-    ? todasLasMascotas
-    : todasLasMascotas.filter(mascota => mascota.especie === especieSeleccionada);
+    ? mascotasData
+    : mascotasData.filter(mascota => mascota.especie === especieSeleccionada);
 
   const openModal = (mascota) => {
     setSelectedMascota(mascota);
@@ -257,7 +112,16 @@ const Adopta = () => {
   };
 
   const abrirModalContactos = () => {
-    setContactoModalVisible(true);
+    // Check if the selected pet is the user's own
+    if (selectedMascota.isUserPet) {
+      Alert.alert(
+        'Esta es tu mascota',
+        'No puedes adoptar tu propia mascota que has puesto en adopción.',
+        [{ text: 'Entendido' }]
+      );
+    } else {
+      setContactoModalVisible(true);
+    }
   };
 
   const cerrarModalContactos = () => {
@@ -307,6 +171,30 @@ const Adopta = () => {
     return tipo === 'asociación' ? '🏢' : '👤';
   };
 
+  // Show loading spinner while fetching data
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#e07978" />
+        <Text style={styles.loadingText}>Cargando mascotas...</Text>
+      </View>
+    );
+  }
+
+  // Show error message if there was an error
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Button 
+          title="Reintentar" 
+          onPress={() => window.location.reload()}
+          color="#e07978"
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Adopción</Text>
@@ -337,6 +225,11 @@ const Adopta = () => {
             <Text style={styles.nombre}>{item.nombre}</Text>
             <Text style={styles.detalle}>Edad: {item.edad}</Text>
             <Text style={styles.detalle}>Especie: {item.especie.charAt(0).toUpperCase() + item.especie.slice(1)}</Text>
+            {item.isUserPet && (
+              <View style={styles.userPetBadge}>
+                <Text style={styles.userPetText}>Tu mascota</Text>
+              </View>
+            )}
           </Pressable>
         )}
       />
@@ -361,12 +254,21 @@ const Adopta = () => {
                 <Text style={styles.modalDetail}>Tamaño: {selectedMascota.tamaño}</Text>
                 <Text style={styles.modalDetail}>Vacunado: {selectedMascota.vacunado ? 'Sí' : 'No'}</Text>
                 <Text style={styles.modalDetail}>Descripción: {selectedMascota.descripcion}</Text>
-                <Button 
-                  title="Contactar para adoptar" 
-                  onPress={abrirModalContactos}
-                  color="#e07978"
-                  style={styles.closeButton}
-                />
+                
+                {selectedMascota.isUserPet ? (
+                  <View style={styles.ownPetNotice}>
+                    <Text style={styles.ownPetNoticeText}>Esta es tu mascota en adopción</Text>
+                    <Text style={styles.ownPetNoticeSubtext}>No puedes adoptar tu propia mascota</Text>
+                  </View>
+                ) : (
+                  <Button 
+                    title="Contactar para adoptar" 
+                    onPress={abrirModalContactos}
+                    color="#e07978"
+                    style={styles.closeButton}
+                  />
+                )}
+                
                 <Pressable style={styles.closeButton} onPress={closeModal}>
                   <Text style={styles.closeButtonText}>Cerrar</Text>
                 </Pressable>
@@ -446,6 +348,31 @@ const Adopta = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     padding: 10,
@@ -490,6 +417,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     elevation: 3,
+    
   },
   imagen: {
     width: 100,
@@ -502,6 +430,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   detalle: {
+    fontWeight: 'bold',
     fontSize: 14,
     color: '#8e7b85',
   },
@@ -512,6 +441,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
+    
     width: '80%',
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -535,6 +465,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalDetail: {
+    fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 10,
   },
@@ -621,6 +552,42 @@ const styles = StyleSheet.create({
   contactoMethodValue: {
     fontSize: 14,
     color: '#333',
+  },
+  userPetBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  userPetText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  ownPetNotice: {
+    backgroundColor: '#f8d7da',
+    borderColor: '#f5c6cb',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  ownPetNoticeText: {
+    color: '#721c24',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  ownPetNoticeSubtext: {
+    color: '#721c24',
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: 'center',
   },
 });
 

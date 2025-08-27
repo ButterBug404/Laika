@@ -24,12 +24,13 @@ const Home = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0); // Track the current image index
   const icons_home_size = 40; // Variable para el tamaño de los iconos
-  const images = [
-    'https://placehold.co/600x400.png',
-    'https://placehold.co/600x400.png',
-    'https://placehold.co/600x400.png',
-    'https://placehold.co/600x400.png',
+  const carouselItems = [
+    { id: 'Anuncio1', image: require('../assets/anuncios/1.png'), titulo: 'Cuidado Básico de Mascotas' },
+    { id: 'Anuncio2', image: require('../assets/anuncios/2.png'), titulo: 'Servicios Veterinarios' },
+    { id: 'Anuncio3', image: require('../assets/anuncios/3.png'), titulo: 'Higiene y Limpieza' },
+    { id: 'Anuncio4', image: require('../assets/anuncios/4.png'), titulo: 'Adopción Responsable' },
   ];
+  const images = carouselItems.map(item => item.image);
 
   const scrollViewRef = useRef(null); // Ref for the ScrollView
 
@@ -112,13 +113,12 @@ const Home = () => {
               scrollEventThrottle={1}
 
             >
-              {images.map((image, index) => {
-                const anuncioScreens = ['Anuncio1', 'Anuncio2', 'Anuncio3', 'Anuncio4'];
+              {carouselItems.map((item, index) => {
                 return (
                   <View key={index} style={styles.imageContainerHome}>
-                    <TouchableOpacity onPress={() => navigation.navigate(anuncioScreens[index])}>
+                    <TouchableOpacity onPress={() => navigation.navigate('AnuncioDetalle', { anuncioId: item.id, titulo: item.titulo })}>
                       <Animated.Image
-                        source={{ uri: image }}
+                        source={item.image}
                         style={styles.imageHome}
                         resizeMode="contain"
                       />
@@ -203,7 +203,7 @@ const Home = () => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Configurar')}>
               <View style={styles.boxHome}>
                 <Ionicons name="person-sharp" size={icons_home_size} color="#e07978" style={styles.navigationIconHome} />
                 <Text style={styles.cardTextHome}>Perfil</Text>
@@ -211,7 +211,7 @@ const Home = () => {
             </TouchableOpacity>
           </ScrollView>
 
-          {/* Sección de adopciones */}
+          {/* Sección de adopciones 
           <Text style={styles.title2Home}>Adopciones</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.adopcionScrollHome}>
             <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'perro' })}>
@@ -253,7 +253,69 @@ const Home = () => {
                 <Text style={styles.cardTextHome}>Aves</Text>
               </View>
             </TouchableOpacity>
-          </ScrollView>
+          </ScrollView>*/}
+
+          {/* Sección de patrocinadores */}
+          <Text style={styles.title2Home}>Adopciones</Text>
+          <View style={styles.patrocinadoresContainerHome}>
+            
+            {/* Primera fila de patrocinadores */}
+            <View style={styles.filaAdopcionesHome}>
+              <View style={styles.patrocinadorHome}>
+                <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'perro' })}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imageAdopciones}
+                      source={{ uri: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106081140_WY72LbPdUvbkrgh.png' }}
+                    />
+                  </View>
+                  <Text style={styles.patrocinadoresTextHome}>Perros</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.patrocinadorHome}>
+                <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'gato' })}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imageAdopciones}
+                      source={{ uri: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106081149_CdyhT45MJPOVef2.png' }}
+                    />
+                  </View>
+                  <Text style={styles.patrocinadoresTextHome}>Gatos</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Segunda fila de patrocinadores */}
+            <View style={styles.filaPatrocinadoresHome}>
+              <View style={styles.patrocinadorHome}>
+                
+                <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'conejo' })}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imageAdopciones}
+                      source={{ uri: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106081154_rZ9YJ8xmGJicewf.png' }}
+                    />
+                  </View>
+                  <Text style={styles.patrocinadoresTextHome}>Conejos</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.patrocinadorHome}>
+                
+                <TouchableOpacity onPress={() => navigation.navigate('Adopción', { filtroEspecie: 'ave' })}>
+                  <View style={styles.boxPatrocinadorHome}>
+                    <Image
+                      style={styles.imageAdopciones}
+                      source={{ uri: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106081164_8IjefME4LRVFUwt.png' }}
+                    />
+                  </View>
+                  <Text style={styles.patrocinadoresTextHome}>Aves</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+          </View>
 
           {/* Sección de patrocinadores */}
           <Text style={styles.title2Home}>Patrocinadores</Text>
@@ -267,7 +329,7 @@ const Home = () => {
                   <View style={styles.boxPatrocinadorHome}>
                     <Image
                       style={styles.imagePatrocinador}
-                      source={{ uri: 'https://scontent.fgdl5-4.fna.fbcdn.net/v/t39.30808-6/347241556_1066020577691416_3857840419303509910_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=lBqBKYJ5UEYQ7kNvwGe7-2T&_nc_oc=AdnSODeescpsx9wrJKHgv9TxqphH-DRPW4yaYgojHlalLa0lbkBph3kui1oYtjsg1KlI6m9bfeWJtciw_AU5dgKF&_nc_zt=23&_nc_ht=scontent.fgdl5-4.fna&_nc_gid=P3I-Q2hf19DplvxajIWYkw&oh=00_AfSycZlj5BQk6_bJXAVRuT687gxG4xNpYlrBVvu6rpplNQ&oe=687B0466' }}
+                      source={require('../assets/veteridocs.jpg')}
                     />
                   </View>
                 </TouchableOpacity>
@@ -343,7 +405,7 @@ const styles = StyleSheet.create({
     color: 'black',
     lineHeight: 20,
     fontFamily: 'sans-serif',
-    fontWeight: '600',
+    fontWeight: 'semibold',
     textAlign: 'justify', // Justificar el texto
     marginBottom: 20, // Añadir un margen inferior para separar del carrusel
     marginTop: 10, // Añadir un margen superior para separar del título
@@ -379,7 +441,7 @@ const styles = StyleSheet.create({
   userNameHome: {
     fontSize: 18,
     color: '#666',
-    fontWeight: '600',
+    fontWeight: 'semibold',
   },
   title2Home: {
     marginTop: 20,
@@ -414,7 +476,7 @@ const styles = StyleSheet.create({
 
   boxHome: {
     alignItems: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 12,
     marginVertical: 25,
   },
   cardTextHome: {
@@ -435,7 +497,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   adopcionScrollHome: {
-    marginTop: 10,
+    margin: 10,
     paddingHorizontal: 10,
   },
   tituloDatosMascotasHome: {
@@ -455,6 +517,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+
+/*fila de adopciones*/
+  
   tituloPatrocinadoresHome: {
     marginTop: 20,
     fontSize: 24,
@@ -462,6 +527,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'black',
   },
+
+  imageAdopciones: {
+  width: 145,
+  height: 145,
+  borderRadius: 12,
+  marginBottom: 10,
+  elevation: 4,
+  backgroundColor: "white",
+  resizeMode: 'center'
+},
+
   patrocinadoresContainerHome: {
     marginVertical: 20,
     paddingHorizontal: 10,
@@ -505,6 +581,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+
+/*fila de adopciones*/
+  
+    filaAdopcionesHome: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+
+
   navigationIconHome: {
     marginBottom: 10,
     backgroundColor: 'white',

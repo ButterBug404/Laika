@@ -1,38 +1,58 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
 const Lista_Anuncios = () => {
   const navigation = useNavigation();
+  const [secciones, setSecciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const seccion1 = [
-    { id: 'Anuncio1', titulo: 'Cuidado Básico de Mascotas', descripcion: 'Guía completa para el cuidado diario' },
-    { id: 'Anuncio2', titulo: 'Servicios Veterinarios', descripcion: 'Encuentra el mejor veterinario cerca' },
-    { id: 'Anuncio3', titulo: 'Higiene y Limpieza', descripcion: 'Mantén a tu mascota limpia y saludable' },
-  ];
+  useEffect(() => {
+    const fetchAnuncios = async () => {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/ButterBug404/ejemplo_de_un_json/refs/heads/main/anuncios.json');
+        const data = await response.json();
+        setSecciones(data.secciones);
+      } catch (e) {
+        setError('No se pudieron cargar los anuncios. ');
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const seccion2 = [
-    { id: 'Anuncio4', titulo: 'Adopción Responsable', descripcion: 'Todo lo que necesitas saber antes de adoptar' },
-    { id: 'Anuncio5', titulo: 'Nutrición Animal', descripcion: 'Alimentación balanceada para tu mascota' },
-    { id: 'Anuncio6', titulo: 'Entrenamiento Canino', descripcion: 'Técnicas básicas de adiestramiento' },
-  ];
-
-  const seccion3 = [
-    { id: 'Anuncio7', titulo: 'Primeros Auxilios', descripcion: 'Qué hacer en emergencias veterinarias' },
-    { id: 'Anuncio8', titulo: 'Vacunación', descripcion: 'Calendario de vacunas para mascotas' },
-  ];
+    fetchAnuncios();
+  }, []);
 
   const renderAnuncio = (anuncio) => (
     <TouchableOpacity
       key={anuncio.id}
       style={styles.anuncioItem}
-      onPress={() => navigation.navigate(anuncio.id)}
+      onPress={() => navigation.navigate('AnuncioDetalle', { anuncioId: anuncio.id, titulo: anuncio.titulo })}
     >
       <Text style={styles.anuncioTitulo}>{anuncio.titulo}</Text>
       <Text style={styles.anuncioDescripcion}>{anuncio.descripcion}</Text>
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#b04f4f" />
+        <Text style={styles.mensaje}>Cargando anuncios...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -40,20 +60,12 @@ const Lista_Anuncios = () => {
         <ScrollView>
           <Text style={styles.mainTitle}>Lista de Anuncios</Text>
           
-          <View style={styles.seccion}>
-            <Text style={styles.seccionTitulo}>Sección 1 - Cuidados Básicos</Text>
-            {seccion1.map(renderAnuncio)}
-          </View>
-
-          <View style={styles.seccion}>
-            <Text style={styles.seccionTitulo}>Sección 2 - Adopción y Entrenamiento</Text>
-            {seccion2.map(renderAnuncio)}
-          </View>
-
-          <View style={styles.seccion}>
-            <Text style={styles.seccionTitulo}>Sección 3 - Salud y Emergencias</Text>
-            {seccion3.map(renderAnuncio)}
-          </View>
+          {secciones.map((seccion, index) => (
+            <View key={index} style={styles.seccion}>
+              <Text style={styles.seccionTitulo}>{seccion.titulo}</Text>
+              {seccion.anuncios.map(renderAnuncio)}
+            </View>
+          ))}
         </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -65,6 +77,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     padding: 20,
+  },
+  mensaje: {
+    fontSize: 16,
+    color: 'black',
+    textAlign: 'center',
+    marginVertical: 20,
   },
   mainTitle: {
     fontSize: 28,
@@ -102,8 +120,13 @@ const styles = StyleSheet.create({
   },
   anuncioDescripcion: {
     fontSize: 14,
-    color: '#666',
+    color: 'black',
     lineHeight: 20,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

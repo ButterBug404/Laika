@@ -9,15 +9,18 @@ import * as ImagePicker from 'expo-image-picker';
 import { getMascotas } from './MascotasData';
 import { useUser } from './UserContext';
 
-const Perfil = ({ setIsLoggedIn }) => {
+const Perfil = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
-  const { userProfile, updateUserProfile, getFullName } = useUser();
+  const { userProfile, updateUserProfile, getFullName, logoutUser } = useUser();
   const [perros, setPerros] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [editableProfile, setEditableProfile] = useState(userProfile);
   const [emailUsername, setEmailUsername] = useState('');
   const [emailDomain, setEmailDomain] = useState('gmail.com');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const emailDomains = ['gmail.com', 'hotmail.com', 'outlook.com'];
 
@@ -106,6 +109,50 @@ const Perfil = ({ setIsLoggedIn }) => {
     setIsEditing(!isEditing);
   };
 
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditableProfile(userProfile);
+    const emailParts = userProfile.correo.split('@');
+    if (emailParts.length === 2) {
+      setEmailUsername(emailParts[0]);
+      setEmailDomain(emailParts[1]);
+    }
+  };
+
+  const handleEditPassword = () => {
+    if (isEditingPassword) {
+      // Validar y guardar la nueva contraseña
+      if (newPassword.length < 8) {
+        Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres.');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        Alert.alert('Error', 'Las contraseñas no coinciden.');
+        return;
+      }
+
+      // Actualizar la contraseña en el perfil del usuario
+      updateUserProfile({ contraseña: newPassword });
+      
+      // Limpiar campos y salir del modo de edición
+      setNewPassword('');
+      setConfirmPassword('');
+      setIsEditingPassword(false);
+      
+      Alert.alert('Éxito', 'Tu contraseña ha sido actualizada.');
+    } else {
+      // Entrar en modo de edición de contraseña
+      setIsEditingPassword(true);
+    }
+  };
+
+  const cancelPasswordEdit = () => {
+    setNewPassword('');
+    setConfirmPassword('');
+    setIsEditingPassword(false);
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Cerrar Sesión',
@@ -119,14 +166,14 @@ const Perfil = ({ setIsLoggedIn }) => {
           text: 'Cerrar Sesión',
           style: 'destructive',
           onPress: () => {
-            setIsLoggedIn(false); // Cambia el estado de sesión a no logueado
+            logoutUser(); // Use logoutUser from context
           },
         },
       ]
     );
   };
 
-  // Function to navigate to mis_mascotas.js
+  // Función para navegar a mis_mascotas.js
   const handleNavigateToMisMascotas = (perro) => {
     navigation.navigate('Mascotas', { perroId: perro.id });
   };
@@ -253,11 +300,60 @@ const Perfil = ({ setIsLoggedIn }) => {
         <TouchableOpacity
           style={[styles.botonPerfil, isEditing && styles.botonEditarPerfil]}
           onPress={handleEditToggle}
+          disabled={isEditingPassword}
         >
           <Text style={styles.textoBotonPerfil}>
             {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
           </Text>
         </TouchableOpacity>
+
+        {/* Botón para cancelar la edición del perfil */}
+        {isEditing && (
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={handleCancelEdit}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Botón para editar contraseña */}
+        <TouchableOpacity
+          style={[styles.botonPerfil, isEditingPassword && styles.botonEditarPerfil]}
+          onPress={handleEditPassword}
+          disabled={isEditing}
+        >
+          <Text style={styles.textoBotonPerfil}>
+            {isEditingPassword ? 'Guardar Contraseña' : 'Editar Contraseña'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Formulario de edición de contraseña */}
+        {isEditingPassword && (
+          <View style={styles.passwordEditContainer}>
+            <Text style={styles.passwordEditTitle}>Editar Contraseña</Text>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Nueva contraseña"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirmar contraseña"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity
+              style={styles.cancelPasswordButton}
+              onPress={cancelPasswordEdit}
+            >
+              <Text style={styles.cancelPasswordText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Botón para cerrar sesión */}
         <TouchableOpacity
@@ -279,7 +375,7 @@ const Perfil = ({ setIsLoggedIn }) => {
                   onPress={() => handleNavigateToMisMascotas(perro)}
                 >
                   <Image 
-                    source={{ uri: perro.imagen }} 
+                    source={{ uri: perro.imagencara }} 
                     style={styles.perroImagen} 
                   />
                   <Text style={styles.perroText}>{perro.nombre}</Text>
@@ -303,7 +399,7 @@ const Perfil = ({ setIsLoggedIn }) => {
                   onPress={() => handleNavigateToMisMascotas(perro)}
                 >
                   <Image 
-                    source={{ uri: perro.imagen }} 
+                    source={{ uri: perro.imagencara }} 
                     style={styles.perroImagen} 
                   />
                   <Text style={styles.perroText}>{perro.nombre}</Text>
@@ -366,6 +462,7 @@ const styles = StyleSheet.create({
     color: '#666',
     flex: 1,
     textAlign: 'right',
+    fontWeight: 'semibold',
   },
   inputPerfil: {
     flex: 1,
@@ -375,6 +472,15 @@ const styles = StyleSheet.create({
     borderColor: '#DDD',
     borderWidth: 1,
     textAlign: 'right',
+  },
+  cancelButton: {
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
   nombrePerfil: {
     fontSize: 24,
@@ -439,9 +545,11 @@ const styles = StyleSheet.create({
   },
   estadoPresente: {
     color: '#32CD32',
+    fontWeight: 'bold',
   },
   estadoDesaparecido: {
     color: '#FF6347',
+    fontWeight: 'bold',
   },
   botonPerfil: {
     backgroundColor: '#000000ff',
@@ -496,6 +604,7 @@ const styles = StyleSheet.create({
     color: '#666',
     margin: 20,
     fontStyle: 'italic',
+    fontWeight: 'semibold',
   },
   profileImageContainer: {
     position: 'relative',
@@ -530,11 +639,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'right',
+    fontWeight: 'semibold',
   },
   emailDomain: {
     fontSize: 14,
     color: '#999',
     textAlign: 'right',
+    fontWeight: 'semibold',
   },
   emailEditContainer: {
     flexDirection: 'row',
@@ -556,10 +667,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginHorizontal: 2,
+    fontWeight: 'semibold',
   },
   domainPicker: {
     flex: 1,
     height: 40,
+  },
+  passwordEditContainer: {
+    width: '100%',
+    marginTop: 15,
+    padding: 15,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  passwordEditTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+    textAlign: 'center',
+  },
+  passwordInput: {
+    backgroundColor: '#FFF',
+    padding: 12,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    marginBottom: 10,
+  },
+  cancelPasswordButton: {
+    alignSelf: 'center',
+    marginTop: 5,
+    padding: 10,
+  },
+  cancelPasswordText: {
+    color: '#666666ff',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
 

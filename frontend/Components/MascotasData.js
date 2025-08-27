@@ -1,74 +1,67 @@
-// This file will serve as a central place to store and share mascotas data
-
-// Initial mascotas data
+// Add a found pet for testing the match feature
 let mascotas = [
   {
     id: '1',
-    nombre: 'Firulais',
-    edad: '2 años',
-    raza: 'Golden Retriever',
-    estado: 'Presente',
-    imagen: 'https://imgs.search.brave.com/ZafHjAFOxVGuNnA9MVvKkjxki8VGsscankVblDP-lbg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzExLzM1LzY1LzMz/LzM2MF9GXzExMzU2/NTMzODJfQ0pEZmc4/R3hCMEljalhIOFVi/QmRUYk1DRE8yb213/YnYuanBn',
-    tipoRegistro: 'perdida',
+    nombre: 'Laika',
+    edad: '15 años',
+    raza: 'Poodle',
+    estado: 'Desaparecido',
+    tipoRegistro: 'normal', // Regular pet registration
+    imagencara: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106141835_XolQtUvSjNMtqYw.png',
+    imagen: [
+      'https://f2.toyhou.se/file/f2-toyhou-se/images/106165585_HHpNKxAWFEirnQL.png',
+      'https://f2.toyhou.se/file/f2-toyhou-se/images/106165577_kdJ94HNbowtEydO.png',
+      'https://f2.toyhou.se/file/f2-toyhou-se/images/106165593_PShUzjVx7B3rAmt.png'
+    ],
     especie: 'perro',
-    color: 'Dorado',
+    color: 'Blanco',
     tamaño: 'Grande',
-    descripcion: 'Perro muy amigable y juguetón',
-    contacto: 'Contactar através del perfil',
+    sexo: 'Hembra',
+    descripcion: 'odia jugar con niños y no es cariñosa, le gusta ver telenovelas y comer snacks de pollo deshidratado',
+    contacto: 'Whatsapp',
     vacunado: true,
     fechaRegistro: new Date().toISOString(),
     ubicacion: {
       latitude: 19.4326,
       longitude: -99.1332,
-      direccion: 'Ciudad de México'
-    }
+      estado_republica: 'Jalisco',
+      ciudad: 'Guadalajara',
+      direccion: 'Av. Chapultepec 123, Guadalajara'
+    },
+    ultimaVezVisto: '15/7/2023',
+    ubicacionPerdida: 'Parque Colomos, Guadalajara',
+    descripcionDesaparicion: 'Se perdió durante un paseo en el parque, se soltó de la correa al perseguir una ardilla.',
+    recompensa: '$1000 MXN',
+    razonPerdida: 'extravio'
   },
   {
     id: '2',
-    nombre: 'Luna',
-    edad: '1 año',
-    raza: 'Pastor Alemán',
-    estado: 'Desaparecido',
-    imagen: 'https://imgs.search.brave.com/NCAUWm_n09bDpCb1rqmrjsoyzNHj41b6HuhxpA9K3jY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jb250/ZW50Lm5hdGlvbmFs/Z2VvZ3JhcGhpYy5j/b20uZXMvbWVkaW8v/MjAyNC8wNy8wNS9v/am9zLXBlcnJvcy00/XzVlY2YxYjFhXzI0/MDcwNTA4NDE0OF84/MDB4ODAwLmpwZw',
-    tipoRegistro: 'perdida',
-    especie: 'perro',
-    color: 'Negro',
-    tamaño: 'Grande',
-    descripcion: 'Mascota muy cariñosa, responde a su nombre. Llevaba collar azul cuando desapareció.',
-    contacto: 'Contactar através del perfil',
-    vacunado: true,
-    fechaRegistro: new Date().toISOString(),
-    ultimaVezVisto: 'Hace 2 días',
-    ubicacionPerdida: 'Parque Central, Guadalajara',
-    recompensa: '$500 MXN',
-    ubicacion: {
-      latitude: 20.6597,
-      longitude: -103.3496,
-      direccion: 'Parque Central, Guadalajara'
-    }
-  },
-  {
-    id: '3',
-    nombre: 'Max',
-    edad: '3 años',
-    raza: 'Labrador',
+    edad: '4 años',
+    raza: 'Poodle',
     estado: 'Presente',
-    imagen: 'https://imgs.search.brave.com/-QvVD1JB8mK_vBIdzVGSHS6ROqbb2QkLHxrVsERFE-o/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90My5m/dGNkbi5uZXQvanBn/LzA4Lzk3LzIwLzc0/LzM2MF9GXzg5NzIw/NzQ4OV9pSGtqOFZF/ZVI1aUJXZ2NpdHEx/MVJDYXZvbU1WTU13/VS5qcGc',
-    tipoRegistro: 'perdida',
+    tipoRegistro: 'encontrada', // Found pet registration
+    imagencara: 'https://f2.toyhou.se/file/f2-toyhou-se/images/106324356_PJzDPABm7XCvlGK.png',
+    imagen: [],
     especie: 'perro',
-    color: 'Marrón',
-    tamaño: 'Grande',
-    descripcion: 'Perro muy tranquilo y obediente',
-    contacto: 'Contactar através del perfil',
-    vacunado: true,
+    color: 'Blanco',
+    tamaño: 'Mediano',
+    sexo: 'Hembra',
+    descripcion: 'Encontrada deambulando cerca del parque, muy amigable y cariñosa. Tiene un collar rosado.',
+    contacto: 'Whatsapp: 3411279817',
+    vacunado: false,
     fechaRegistro: new Date().toISOString(),
     ubicacion: {
-      latitude: 19.4326,
-      longitude: -99.1332,
-      direccion: 'Ciudad de México'
-    }
-  },
+      latitude: 19.4340,
+      longitude: -99.1350,
+      estado_republica: 'Jalisco',
+      ciudad: 'Guadalajara',
+      direccion: 'Parque Colomos, Zona Norte, Guadalajara'
+    },
+  }
 ];
+
+// Add detailed information for missing pets
+//
 
 // Add detailed information for missing pets
 const addMissingPetDetails = () => {
@@ -77,8 +70,10 @@ const addMissingPetDetails = () => {
       mascota.ultimaVezVisto = mascota.ultimaVezVisto || 'Hace 2 días';
       mascota.ubicacionPerdida = mascota.ubicacionPerdida || 'Parque Central, Guadalajara';
       mascota.descripcion = mascota.descripcion || 'Mascota muy cariñosa, responde a su nombre. Llevaba collar azul cuando desapareció.';
+      mascota.descripcionDesaparicion = mascota.descripcionDesaparicion || ''; // Default empty for optional field
       mascota.contacto = mascota.contacto || 'Contactar através del perfil';
       mascota.recompensa = mascota.recompensa || '$500 MXN';
+      mascota.razonPerdida = mascota.razonPerdida || 'extravio'; // Default reason if not specified
     }
   });
 };
@@ -124,10 +119,12 @@ export const updateMascotaData = (id, newData) => {
       color: newData.color || mascota.color,
       tamaño: newData.tamaño || mascota.tamaño,
       descripcion: newData.descripcion || mascota.descripcion,
+      descripcionDesaparicion: newData.descripcionDesaparicion !== undefined ? newData.descripcionDesaparicion : mascota.descripcionDesaparicion,
       contacto: newData.contacto || mascota.contacto,
       recompensa: newData.recompensa || mascota.recompensa,
       ultimaVezVisto: newData.ultimaVezVisto || mascota.ultimaVezVisto,
       ubicacionPerdida: newData.ubicacionPerdida || mascota.ubicacionPerdida,
+      razonPerdida: newData.razonPerdida || mascota.razonPerdida,
       ubicacion: newData.ubicacion || mascota.ubicacion,
       vacunado: newData.vacunado !== undefined ? newData.vacunado : mascota.vacunado
     } : mascota

@@ -18,9 +18,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     width: '100%',              // Make it full width
     marginBottom: 0,            // No margin at bottom
-    paddingBottom: "80",          // Add extra padding at the bottom
+    paddingBottom: 100,          // Changed from string "100" to number 100
     // Extend to bottom of screen
     flex: 1,
+    minHeight: '100%',   // Added to ensure the container fills the available height
   },
   
   passwordContainer: {
@@ -43,22 +44,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'center',
+    fontWeight: 'bold', // Added fontWeight bold
   },
 
   // Logo style
   logoApp: {
-    width: 270,
-    height: 200,
-    marginTop: '15%',
-    marginBottom: '2%',
     alignSelf: 'center',
+    width: 300,  // Cambia este valor para ajustar el ancho
+    height: 300,
   },
 
   // Titles and text styles
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#843947',
+    fontSize: 45,
+    fontWeight: 'bold', // Already bold
+    color: '#000000ff',
     textAlign: 'center',
     fontFamily: 'sans-serif',
   },
@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     color: '#e17877',
     marginBottom: 10,
     textAlign: 'center',
+    fontWeight: 'bold', // Changed from semibold to bold
   },
   
   subtitle2: {
@@ -77,12 +78,12 @@ const styles = StyleSheet.create({
     marginHorizontal: '15%',
     marginBottom: 20,
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontWeight: 'bold', // Already bold
   },
   
   toggleText: {
     color: '#843947',
-    fontWeight: 'bold',
+    fontWeight: 'bold', // Already bold
     margin: 10,
     marginBottom: 50,
     textAlign: 'center',
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   
   buttonText: {
     color: '#ffffff',
-    fontWeight: 'bold',
+    fontWeight: 'bold', // Already bold
   },
 
   // Input and picker styles
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     padding: 10,
     borderRadius: 4,
+    fontWeight: 'semibold', // Added fontWeight semibold
   },
   
   picker: {
@@ -168,7 +170,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'flex-start', // Changed from 'center' to 'flex-start'
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingTop: 20,      // Changed from paddingVertical to only paddingTop
+    paddingBottom: 0,    // No bottom padding
     width: '100%', // Ensure full width
   },
   
@@ -182,6 +185,7 @@ const styles = StyleSheet.create({
     marginTop: -10,
     marginBottom: 10,
     textAlign: 'center',
+    fontWeight: 'bold', // Changed from semibold to bold
   },
   
   logoCuenta: {
@@ -198,6 +202,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F7F7',
     alignItems: 'center',
     paddingTop: 20,
+  },
+
+  apellidoPerfil: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 5,
+    fontWeight: 'bold', // Changed from semibold to bold
   },
 });
 
