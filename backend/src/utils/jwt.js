@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const privateKeyPath = path.join(__dirname, '../keys/private.key')
+const privateKeyPath = path.join(__dirname, '../../keys/private.key')
 
 export function generateToken(user, expiration = 1){
 	const privateKey = fs.readFileSync(privateKeyPath, 'utf8');

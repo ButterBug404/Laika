@@ -21,14 +21,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker'; // Add this import for image picking
 import NetInfo from '@react-native-community/netinfo';
+import Constants from 'expo-constants';
 
 // Archivos de componentes
 import Inicio from './Components/Home';
-import Registrar from './Components/Registrar';
-import Mascotas from './Components/Mis_Mascotas';
-import Adoptar from './Components/Adoptar';
-import Cuenta from './Components/Cuenta';
-import UserContext, { useUser } from './Components/UserContext';
+import Registrar from './Components/registrar';
+import Mascotas from './Components/mis_mascotas';
+import Adoptar from './Components/adoptar';
+import Cuenta from './Components/cuenta';
 
 // Estilos
 import styles from './Components/Estilos/Estilos.js';
@@ -671,7 +671,7 @@ const App = () => {
 
 export default App;
 
-{/* 
+{ 
   const handleLogin = async () => {
     if (!correo || !password) {
       Alert.alert(
@@ -684,12 +684,12 @@ export default App;
       );
     } else {
       console.log('LOG: do it');
-      const res = await fetch(process.env.EXPO_PUBLIC_API_URL + '/login', {
+      const res = await fetch(Constants.expoConfig.extra.API_URL + '/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: correo }),
+        body: JSON.stringify({ email: correo, password: password}),
       });
       const data = await res.json();
       console.log('LOG: ', data);
@@ -699,4 +699,263 @@ export default App;
       }
     }
   };
-  */ }
+}
+  if (!isLoggedIn) {
+    return (
+      <UserProvider>
+        <SafeAreaProvider>
+          <SafeAreaView style={styles.containerApp}>
+            <ImageBackground
+              source={require('./assets/background.jpg')}
+              style={styles.card}
+              resizeMode="cover"
+              imageStyle={styles.backgroundImage}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardAvoidingView}>
+                <ScrollView
+                  contentContainerStyle={styles.scrollContentContainer}
+                  showsVerticalScrollIndicator={false}>
+                  <Image
+                    source={require('./assets/Login.gif')}
+                    style={styles.logoApp}
+                  />
+                  <View style={[styles.formContainer, { flex: 1 }]}>
+                    <Text style={styles.title}>Laika</Text>
+
+                    <Text style={styles.subtitle2}>
+                      Buscaremos a tu peludito en todo el universo.
+                    </Text>
+                    <Text style={styles.subtitle}>
+                      {isSignUp
+                        ? 'Regístrate para buscar a tu peludito.'
+                        : 'Inicia sesión para continuar.'}
+                    </Text>
+                    {isSignUp && (
+                      <>
+                        <TextInput
+                          placeholder="Nombre"
+                          style={styles.input}
+                          placeholderTextColor="#888888"
+                          value={nombre}
+                          onChangeText={(text) => setNombre(text)}
+                        />
+                        <TextInput
+                          placeholder="Apellido Paterno"
+                          style={styles.input}
+                          placeholderTextColor="#888888"
+                          value={apellidoPaterno}
+                          onChangeText={(text) => setApellidoPaterno(text)}
+                        />
+                        <TextInput
+                          placeholder="Apellido Materno"
+                          style={styles.input}
+                          placeholderTextColor="#888888"
+                          value={apellidoMaterno}
+                          onChangeText={(text) => setApellidoMaterno(text)}
+                        />
+                        <TextInput
+                          placeholder="Correo electrónico"
+                          style={styles.input}
+                          placeholderTextColor="#888888"
+                          value={correo}
+                          onChangeText={(text) => setCorreo(text)}
+                        />
+                        <TextInput
+                          placeholder="Teléfono"
+                          keyboardType="phone-pad"
+                          style={styles.input}
+                          placeholderTextColor="#888888"
+                          value={telefono}
+                          onChangeText={(text) => setTelefono(text)}
+                        />
+                        <Picker
+                          selectedValue={selectedEstado}
+                          style={styles.picker}
+                          onValueChange={(itemValue) => {
+                            setSelectedEstado(itemValue);
+                            setSelectedMunicipio('Selecciona Municipio'); // Reset municipality when state changes
+                          }}>
+                          {estados.map((estado, index) => (
+                            <Picker.Item
+                              key={index}
+                              label={estado}
+                              value={estado}
+                            />
+                          ))}
+                        </Picker>
+                        {selectedEstado && selectedEstado !== 'Selecciona Estado' && (
+                          <Picker
+                            selectedValue={selectedMunicipio}
+                            style={styles.picker}
+                            onValueChange={(itemValue) =>
+                              setSelectedMunicipio(itemValue)
+                            }>
+                            {getMunicipiosByEstado(selectedEstado).map((municipio, index) => (
+                              <Picker.Item
+                                key={index}
+                                label={municipio}
+                                value={municipio}
+                              />
+                            ))}
+                          </Picker>
+                        )}
+                      </>
+                    )}
+                    {!isSignUp && (
+                      <TextInput
+                        placeholder="Correo electrónico"
+                        style={styles.input}
+                        placeholderTextColor="#888888"
+                        value={correo}
+                        onChangeText={(text) => setCorreo(text)}
+                      />
+                    )}
+                    <View style={styles.passwordContainer}>
+                      <TextInput
+                        placeholder="Contraseña"
+                        secureTextEntry={!showPassword} // Mostrar u ocultar contraseña
+                        style={styles.inputPassword}
+                        placeholderTextColor="#888888"
+                        value={password}
+                        onChangeText={(text) => {
+                          setPassword(text);
+                          if (confirmPassword && text !== confirmPassword) {
+                            setPasswordError('La contraseña no coincide');
+                          } else {
+                            setPasswordError('');
+                          }
+                        }}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        style={styles.iconContainer}>
+                        <Ionicons
+                          name={showPassword ? 'eye-off' : 'eye'}
+                          size={24}
+                          color="#000000"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {isSignUp && (
+                      <View style={styles.passwordContainer}>
+                        <TextInput
+                          placeholder="Confirmar contraseña"
+                          secureTextEntry={!showPassword} // Mostrar u ocultar contraseña
+                          style={styles.inputPassword}
+                          placeholderTextColor="#888888"
+                          value={confirmPassword}
+                          onChangeText={(text) => {
+                            setConfirmPassword(text);
+                            if (password && text !== password) {
+                              setPasswordError('La contraseña no coincide');
+                            } else {
+                              setPasswordError('');
+                            }
+                          }}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          style={styles.iconContainer}>
+                          <Ionicons
+                            name={showPassword ? 'eye-off' : 'eye'}
+                            size={24}
+                            color="#000000"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    {passwordError ? (
+                      <Text style={styles.errorText}>{passwordError}</Text>
+                    ) : null}
+                    {isSignUp && (
+                      <Text style={styles.passwordHint}>
+                        La contraseña debe tener al menos 6 caracteres y una
+                        mayúscula.
+                      </Text>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.button}
+                      onPress={isSignUp ? handleRegister : handleLogin}
+                      disabled={
+                        isSignUp &&
+                        (password !== confirmPassword ||
+                          !password ||
+                          !confirmPassword)
+                      }>
+                      <Text style={styles.buttonText}>
+                        {isSignUp ? 'Registrarse' : 'Iniciar Sesión'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+                      <Text style={styles.toggleText}>
+                        {isSignUp
+                          ? '¿Ya tienes cuenta? Inicia sesión'
+                          : '¿No tienes cuenta? Regístrate'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </ImageBackground>
+          </SafeAreaView>
+        </SafeAreaProvider>
+      </UserProvider>
+    );
+  }
+
+  return (
+    <UserProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              switch (route.name) {
+                case 'Inicio':
+                  iconName = focused ? 'home-sharp' : 'home-outline';
+                  break;
+                case 'Mascotas':
+                  iconName = focused ? 'paw-sharp' : 'paw-outline';
+                  break;
+                case 'Registrar':
+                  iconName = focused ? 'add-circle-sharp' : 'add-circle-sharp';
+                  break;
+                case 'Adopción':
+                  iconName = focused ? 'heart-sharp' : 'heart-outline';
+                  break;
+                case 'Perfil':
+                  iconName = focused ? 'person-sharp' : 'person-outline';
+                  break;
+                default:
+                  iconName = focused
+                    ? 'help-circle-sharp'
+                    : 'help-circle-outline';
+                  break;
+              }
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+
+            tabBarActiveTintColor: '#000',
+            tabBarInactiveTintColor: '#777',
+            headerTitle: 'Laika', // Cambia el título del header a "Laika"
+            headerTitleAlign: 'center', // Centra el título
+            headerStyle: { backgroundColor: '#E07978' },
+            headerTintColor: '#ffffffff',
+          })}>
+          
+          <Tab.Screen name="Inicio" component={HomeStack} />
+          <Tab.Screen name="Mascotas" component={MascotasScreen} />
+          <Tab.Screen name="Registrar" component={RegistrarScreen} />
+          <Tab.Screen name="Adopción" component={AdoptaScreen} />
+          <Tab.Screen name="Perfil">
+            {() => <PerfilScreen setIsLoggedIn={setIsLoggedIn} />}
+          </Tab.Screen>
+        </Tab.Navigator>
+      </NavigationContainer>
+    </UserProvider>
+  );
+};
+
+export default App;
