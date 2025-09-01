@@ -61,3 +61,16 @@ export async function insertAdopter(adopter){
 		if(conn) conn.release();
 	}
 }
+
+export async function insertPet(pet){
+	let conn;
+	try{
+		conn = await pool.getConnection();
+		const query = "INSERT INTO pets (user_id, name, species, breed, color, age, sex, size, markings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		const rows = await conn.query(query, [pet.user_id, pet.name, pet.species, pet.breed, pet.color, pet.age, pet.sex, pet.size, pet.markings]);
+	}catch(err){
+		console.log("Error at insertAdopter, ", err);
+	}finally{
+		if(conn) conn.release();
+	}
+}

@@ -32,6 +32,27 @@ export const textValidator = (fieldName, options = {}) => {
   return chain;
 };
 
+export const numValidator = (fieldName, options = {}) => {
+	const chain = body(fieldName)
+		.optional({checkFalsy: options.optional ?? true})
+		.exists().withMessage(`Field "${fieldName}" was expected`)
+		.escape()
+		.trim()
+		.isNumeric().withMessage(`Field "${fieldName} isn't numeric"`)
+	if (options.escape) chain.escape();
+	return chain;
+};
+
+export const collectionValidator = (fieldName, collection, options = {}) => {
+	const chain = body(fieldName)
+		.optional({checkFalsy: options.optional ?? true})
+		.exists().withMessage(`Field "${fieldName}" was expected`)
+		.trim()
+		.isIn(Object.values(collection)).withMessage(`Field "${fieldName}" isn't part of the collection`)
+	if (options.escape) chain.escape();
+	return chain;
+};
+
 export function validateRequest(req, res, next){
 	const errors = validationResult(req);
 	if (!errors.isEmpty()){

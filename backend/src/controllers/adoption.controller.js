@@ -27,8 +27,7 @@ export const registerAdopterController = async (req, res) => {
       new Date()
     ]);
     if (insertedAdopter) {
-      const [newToken] = generateToken({ user_id: payload.user_id });
-      return res.status(201).json({ token: newToken });
+      return res.status(201).json({ success: "User registered as adopter!" });
     } else {
       console.log("Insert adopter failed");
       return res.status(500).json({ failure: "Couldn't complete adopter registration" });
