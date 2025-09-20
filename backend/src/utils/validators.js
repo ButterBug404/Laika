@@ -43,6 +43,23 @@ export const numValidator = (fieldName, options = {}) => {
 	return chain;
 };
 
+function toMariaDbDateTime(isoString) {
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) throw new Error("Invalid date");
+  return d.toISOString().slice(0, 19).replace("T", " ");
+}
+
+export const dateTimeValidator = (fieldName, options = {}) => {
+	const chain = body(fieldName)
+		.exists().withMessage(`Field "${fieldName}" was expected`)
+		.trim()
+		.isISO8601()
+		.withMessage("Date must be in ISO8601 format")
+		.customSanitizer(value => toMariaDbDateTime(value));
+	if(options.escape) chain.escape();
+	return chain;
+}
+
 export const collectionValidator = (fieldName, collection, options = {}) => {
 	const chain = body(fieldName)
 		.optional({checkFalsy: options.optional ?? true})
@@ -52,6 +69,16 @@ export const collectionValidator = (fieldName, collection, options = {}) => {
 	if (options.escape) chain.escape();
 	return chain;
 };
+
+function pointValidator(fieldName = "point") {
+  return body(fieldName)
+    .matches(/^[-+]?\d+(\.\d+)?,[-+]?\d+(\.\d+)?$/)
+    .withMessage("Point must be 'lat,lng' like 12.34,56.789")
+    .customSanitizer(value => {
+      const [x, y] = value.split(",").map(Number);
+      return `POINT(${x} ${y})`;
+    });
+}
 
 export function validateRequest(req, res, next){
 	const errors = validationResult(req);

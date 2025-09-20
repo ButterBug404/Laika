@@ -74,3 +74,16 @@ export async function insertPet(pet){
 		if(conn) conn.release();
 	}
 }
+
+export async function insertMissingAlert(alert){
+	let conn;
+	try{
+		conn = await pool.getConnection();
+		const query = "INSERT INTO missing_alerts (user_id, pet_id, time, location, circumstances) VALUES (?, ?, ?, ?, ?)";
+		const rows = await conn.query(query, [alert.user_id, alert.pet_id, alert.time, alert.location, alert.circumstances]);
+	}catch(err){
+		console.log("Error at insertMissingAlert, ", err);
+	}finally{
+		if(conn) conn.release();
+	}
+}

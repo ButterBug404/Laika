@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { authRouter } from './routes/auth.routes.js';
 import { petsRouter } from './routes/pets.routes.js';
 import { adoptionRouter } from './routes/adoption.routes.js';
+import { missingRouter }  from './routes/missing.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,3 +24,4 @@ app.use(express.json({ limit: '10mb'}));
 app.use('/api', authRouter);
 app.use('/api', petsRouter);
 app.use('/api', adoptionRouter);
+app.use('/api', missingRouter);
