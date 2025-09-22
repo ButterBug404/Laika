@@ -1,7 +1,7 @@
 //External packages
 import express from 'express';
 //Local packages
-import { registerPet } from '../controllers/pets.controller.js';
+import { registerPetController } from '../controllers/pets.controller.js';
 import { 
 	validateRequest, 
 	textValidator,
@@ -39,7 +39,7 @@ const registerPetValidators = [
 ];
 
 
-adoptionRouter.post('/register_pet',
+petsRouter.post('/register_pet',
 	registerPetValidators,
 	validateRequest,
 	registerPetController

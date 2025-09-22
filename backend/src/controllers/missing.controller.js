@@ -22,7 +22,7 @@ export const registerMissingAlertController = async(req, res) => {
 			pet_id, time, location, circumstances
 		} = req.body;
 		const insertedAlert = await insertMissingAlert([
-			payload.user_id
+			payload.user_id,
 			pet_id,
 			time,
 			location,

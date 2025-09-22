@@ -39,6 +39,14 @@ import { UserProvider } from './Components/UserContext'; //DATOS USUARIO
 import Creditos from './Components/Creditos'; //CREDITOS DE LOS DESARROLLADORES Y MAS
 import Registro from './Components/SignUp.js'; // REGISTRAR CUENTA
 
+//Utils
+import store from './utils/store';
+
+//Env variables
+const apiUrl = process.env.API_URL;
+
+console.log(apiUrl);
+
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 

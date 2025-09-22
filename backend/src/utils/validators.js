@@ -70,7 +70,7 @@ export const collectionValidator = (fieldName, collection, options = {}) => {
 	return chain;
 };
 
-function pointValidator(fieldName = "point") {
+export function pointValidator(fieldName = "point") {
   return body(fieldName)
     .matches(/^[-+]?\d+(\.\d+)?,[-+]?\d+(\.\d+)?$/)
     .withMessage("Point must be 'lat,lng' like 12.34,56.789")

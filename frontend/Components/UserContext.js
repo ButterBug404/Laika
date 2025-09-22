@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
+import axios from "axios";
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const UserContext = createContext();
 
@@ -37,14 +39,25 @@ export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const loginUser = (email, password) => {
-    const user = users.find(u => u.correo === email && u.contraseña === password);
-    if (user) {
-      setCurrentUser(user);
-      setIsLoggedIn(true);
-      return user;
-    }
-    return null;
+	const loginUser = async (email, password) => {
+		//const user = users.find(u => u.correo === email && u.contraseña === password);
+		//if (user) {
+		//  setCurrentUser(user);
+		//  setIsLoggedIn(true);
+		//  return user;
+		//}
+		//return null;
+		try {
+			console.log("CUM: ", apiUrl);
+			const res = await axios.post(`${apiUrl}/api/login`, { email, password });
+			const token = res.data.token;
+			console.log("Got JWT:", token);
+
+			return token;
+		} catch (err) {
+			console.error("Login failed:", err.response?.data || err.message);
+			throw err;
+		}
   };
 
   const logoutUser = () => {

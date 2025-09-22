@@ -4,8 +4,7 @@ import{
 } from "./database.js";
 import{
 	verifyToken
-} from '../utils/jwt.js";
-import { jwt } from 'aut
+} from "../utils/jwt.js";
 
 export const registerAdopterController = async (req, res) => {
   try {

@@ -7,8 +7,9 @@ import {
 	numValidator,
 	textValidator,
 	pointValidator,
+	validateRequest,
 } from '../utils/validators.js';
-export const missingRouter = express.router();
+export const missingRouter = express.Router();
 
 const registerMissingAlertValidators = [
 	numValidator('pet_id'),

@@ -1,7 +1,7 @@
 //External packages
 import express from 'express';
 //Local Packages
-import { registerAdopter } from '../controllers/adoption.controller.js';
+import { registerAdopterController } from '../controllers/adoption.controller.js';
 import {validateRequest, textValidator} from '../utils/validators.js';
 export const adoptionRouter = express.Router();
 

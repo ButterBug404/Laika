@@ -4,7 +4,7 @@ import{
 } from "./database.js";
 import {
 	verifyToken
-} from '../utils/jwt.js";
+} from "../utils/jwt.js";
 
 export const registerPetController = async(req, res) => {
 	try{

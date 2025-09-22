@@ -28,10 +28,13 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-			"API_URL":"https://monitor-loyal-openly.ngrok-free.app",
+      "API_URL": "https://monitor-loyal-openly.ngrok-free.app",
       "eas": {
         "projectId": "5aff9daf-7ac6-4f2f-a6e6-17b271b0100e"
       }
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
