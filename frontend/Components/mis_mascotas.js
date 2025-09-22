@@ -29,7 +29,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Import shared data and components for consistency
 import { getMascotas, updateMascotaEstado, updateMascotaData } from './MascotasData';
-import { razasPerro, razasGato, razasConejo, razasAve, colores, EspecieIcon } from './Registrar';
+import { razasPerro, razasGato, razasConejo, razasAve, colores, EspecieIcon } from './registrar';
 
 
 const { width, height } = Dimensions.get('window');

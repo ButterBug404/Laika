@@ -24,10 +24,10 @@ import NetInfo from '@react-native-community/netinfo';
 
 // Archivos de componentes
 import Inicio from './Components/Home';
-import Registrar from './Components/Registrar.js';
-import Mascotas from './Components/Mis_Mascotas.js';
-import Adoptar from './Components/Adoptar.js';
-import Cuenta from './Components/Cuenta.js';
+import Registrar from './Components/registrar.js';
+import Mascotas from './Components/mis_mascotas.js';
+import Adoptar from './Components/adoptar.js';
+import Cuenta from './Components/cuenta.js';
 import UserContext, { useUser } from './Components/UserContext';
 
 // Estilos
