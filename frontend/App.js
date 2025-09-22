@@ -96,7 +96,7 @@ const PerfilScreen = () => (
 );
 
 const LoginScreen = () => {
-  const { loginUser } = useUser();
+  const { loginUser, setIsLoggedIn } = useUser();
   // Multiple animation values for different elements
   const fadeAnim = useRef(new Animated.Value(0)).current; // For overall app
   const slideAnim = useRef(new Animated.Value(-50)).current; // For slide-in effect (from left)
@@ -257,11 +257,14 @@ const LoginScreen = () => {
         'La contraseña debe tener al menos 6 caracteres y una mayúscula.'
       );
     } else {
-      const success = loginUser(correo, password);
-      if (!success) {
+      const token = await loginUser(correo, password);
+      if (!token) {
         Alert.alert('Error', 'Correo o contraseña incorrectos.');
         setPasswordError('Correo o contraseña incorrectos.');
-      }
+      }else{
+				//TODO: This doesn't work
+				setIsLoggedIn(true);
+			}
     }
   };
 
@@ -408,6 +411,7 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
+		console.log("There was a chnage in the atmosphere!");
     if (isLoggedIn) {
       fadeAnim.setValue(0);
       Animated.timing(fadeAnim, {

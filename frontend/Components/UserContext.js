@@ -51,8 +51,7 @@ export const UserProvider = ({ children }) => {
 			console.log("CUM: ", apiUrl);
 			const res = await axios.post(`${apiUrl}/api/login`, { email, password });
 			const token = res.data.token;
-			console.log("Got JWT:", token);
-
+			console.log("STOP WAITING, SUCK COCK NOW");
 			return token;
 		} catch (err) {
 			console.error("Login failed:", err.response?.data || err.message);
