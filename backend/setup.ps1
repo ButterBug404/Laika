@@ -71,7 +71,7 @@ Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd '$PWD'; npm st
 
 # Step 5: Launch ngrok in new window
 Write-Host "-> Launching ngrok in separate window..."
-Start-Process powershell -ArgumentList '-NoExit', '-Command', 'ngrok http --hostname monitor-loyal-openly.ngrok-free.app 3001'
+Start-Process powershell -ArgumentList '-NoExit', '-Command', 'ngrok http --hostname TU.HOST.NAME 3001'
 
 Write-Host "=== Setup complete ==="
 Write-Host "Backend: http://localhost:3001"
