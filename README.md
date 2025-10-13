@@ -1,8 +1,3 @@
-
-# Laika - Busca a tu mascota perdida
-
-En México, una gran cantidad de robos y extravíos de mascotas ocurren cada año, y las opciones para encontrarlas son limitadas. Laika es una aplicación que busca resolver este problema utilizando redes neuronales convolucionales para ayudar al usuario en encontrar a su mascota perdida, específicamente para detectar el rostro de la mascota y recopilar datos que ayuden a los usuarios a reportar y encontrar a sus mascotas perdidas. Este proyecto se enfoca en mejorar la vida de las mascotas y reducir la población de animales en la calle, contribuyendo a un ecosistema más equilibrado.
-
 <div align="center"> 
 <img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="350"> 
 <h1>Laika 🐾 - Busca a tu mascota perdida</h1>
@@ -14,14 +9,7 @@ Una aplicación para Android e iOS que usa **Inteligencia Artificial** para ayud
 <a href="#funcionalidad"><img src="https://img.shields.io/badge/Modelo%20CNN-Detecci%C3%B3n%20Facial-red"></a>
 <br>
 <br>
-<h4>Descarga / Demo</h4>
-<a href="#"><img src="https://img.shields.io/badge/Descargar-APK-007ACC?style=for-the-badge&logo=android&logoColor=white"></a>
-<a href="#"><img src="https://img.shields.io/badge/Demo-Web-2196F3?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
-<br>
-</div>
-
----
-
+  
 ## El Problema y La Solución 🐕‍🦺
 
 En México, el robo y extravío de mascotas es un problema significativo con opciones de búsqueda limitadas.
