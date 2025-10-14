@@ -1,6 +1,7 @@
 <div align="center"> 
 <img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="350"> 
 <h1>Laika 🐾 - Busca a tu mascota perdida</h1>
+  
 Una aplicación para Android e iOS que usa **Inteligencia Artificial** para ayudar a encontrar mascotas extraviadas en México.
 <br> 
 <br>
@@ -25,32 +26,35 @@ Nuestro objetivo es mejorar la vida de las mascotas y contribuir a un ecosistema
 
 ## Características Principales ✨️
 
+<div align="left"> 
+  
 -   **Reconocimiento Facial de Mascotas**: Implementación de una CNN para identificar y registrar características únicas de la mascota.
 -   **Sistema de Reporte Detallado**: Interfaz sencilla para subir información, fotos y la ubicación del extravío/hallazgo.
 -   **Alertas de Coincidencia (Notificaciones)**: Envía notificaciones a los usuarios cuando una mascota reportada como perdida coincide con una mascota reportada como encontrada.
 -   **Mapa Interactivo**: Visualiza los reportes de mascotas perdidas/encontradas en tu área.
 -   **Filtrado Inteligente**: Búsqueda por raza, tamaño, ubicación y fecha.
-
+  </div>
+  
 ---
 
 ## 🧠 Funcionamiento de la Red Neuronal
 
 Laika utiliza un modelo de **Red Neuronal Convolucional** optimizado para la detección y clasificación de rostros/características de mascotas.
 
--   **Entrenamiento**: (Describe brevemente tu dataset o enfoque, ej: Utilizamos un dataset propio de imágenes de alta resolución de mascotas domésticas).
+-   **Entrenamiento**: (Describe brevemente tu dataset o enfoque, ej: Utilizamos un dataset propio de imágenes de alta resolución de mascotas domésticas). 
+  <img src="https://placehold.co/1200x720/png" width="400" alt="Diagrama de Arquitectura o UML">
+  
 -   **Técnica Clave**: El enfoque está en el **_Face Embedding_** para generar un vector numérico único que represente la cara de la mascota, permitiendo comparaciones de similitud eficientes.
-
+  <img src="https://placehold.co/1200x720/png" width="400" alt="Diagrama de Arquitectura o UML">
 ---
 
 ## 🖼️ Screenshots
 
 <p align="center">  
-<img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="200" alt="App Inicio"/>      
-<img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="200" alt="Pantalla Mascotas Perdidas"/>     
-<img src="https://64.media.tumblr.com/de9392259cb8802276ff5e8a915875dc/4dd8504978743887-1f/s1280x1920/45c5f186ff56e1345e953c0c57a195a637c2fd15.pnj" width="200" alt="Detalle de Reporte"/>  
+<img src="https://placehold.co/720x1200/png" width="200" alt="App Inicio"/>      
+<img src="https://placehold.co/720x1200/png" width="200" alt="Pantalla Mascotas Perdidas"/>     
+<img src="https://placehold.co/720x1200/png" width="200" alt="Detalle de Reporte"/>  
 </p>
-
-#### Más [capturas de pantalla y demos](enlace-a-galeria-o-video) aquí.
 
 ---
 
@@ -60,7 +64,7 @@ Laika utiliza un modelo de **Red Neuronal Convolucional** optimizado para la det
 
 **Diagrama de Dependencias (Ejemplo):**
 <p float="left">
-<img src="enlace-a-tu-diagrama-arquitectura.svg" width="800" alt="Diagrama de Arquitectura o UML">
+<img src="https://placehold.co/1200x720/png" width="800" alt="Diagrama de Arquitectura o UML">
 </p>
 *Este proyecto sigue una arquitectura (ej. Clean Architecture / MVVM) para asegurar escalabilidad y mantenibilidad.*
 
@@ -74,33 +78,32 @@ La precisión del modelo se evalúa continuamente. Actualmente, nuestro modelo h
 
 #### 2. ¿Laika solo funciona para perros y gatos?
 
-Actualmente, el enfoque principal de la red neuronal es la detección en **perros y gatos**, que representan la mayoría de los reportes. La arquitectura está diseñada para ser escalable y permitir la inclusión de otros tipos de mascotas en futuras versiones.
+Actualmente, el enfoque principal de la red neuronal es la detección en **perros, gatos, conejos y una cantidad limitada de aves**, que representan la mayoría de los reportes. La arquitectura está diseñada para ser escalable y permitir la inclusión de otros tipos de mascotas en futuras versiones.
 
-#### Más preguntas, únete a nuestra comunidad en [Discord / Telegram](enlace-a-tu-canal).
+#### 3. hay una forma de encontrar mi mascota por medio de un collas GPS
+
+Actualmente, no está implementado pero en el futuro se puede implementar y habrá otra opción de localizzar tu mascota.
+
+<img src="https://placehold.co/1200x720/png" width="500" alt="Anuncio!!!!">
+
+#### Más preguntas, ENVIA mensaje a nuestro [correo electronico](lizette.sereno3898@alumnos.udg.mx).
+
 
 ---
 
-## 🤝 Colaboradores y Contacto
+## 🤝 Colaboradores
 
 -   [Tu Nombre / Tu Perfil de GitHub](https://github.com/tu-usuario): Fundador/Desarrollador Principal/Especialista en ML.
 -   [Nombre del Colaborador](https://github.com/otro-usuario): (Rol, ej: Diseñador UI/UX / Tester).
-
-¡Buscamos **colaboradores** apasionados por el machine learning y el bienestar animal! Todas las contribuciones son bienvenidas.
 
 ---
 
 ## Apoyo y Donaciones ❤️
 
-Tu apoyo nos ayuda a pagar los costos de infraestructura (servidores para el modelo de IA y bases de datos).
+serviría mucho el apoyo y reconocimiento a las ilustraciones y el diseño UX/UI de Papiroflexio que le dió color a nuestro proyecto
 
-<div align="left">
-<a href="enlace-a-web"><img alt="Visita nuestra Web" height="50" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/website_vector.svg"></a> &nbsp;     
-<a href="enlace-a-discord"><img alt="Servidor Discord" height="50" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_vector.svg"></a> &nbsp;     
-<br> 
-<a href="enlace-a-buymeacoffee"><img alt="Invítanos un Café" height="50" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/buymeacoffee-singular_vector.svg"></a> &nbsp;     
-<a href="enlace-a-patreon"><img alt="Patreon" height="50" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/patreon-singular_vector.svg"></a>
-</div>
+<a href='https://ko-fi.com/E1E6N035M' target='_blank'><img height='36' style='border:0px;height:50px;' src='https://storage.ko-fi.com/cdn/kofi2.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 ***
 
-*Este proyecto es parte de una iniciativa de código abierto para promover el uso de IA en la solución de problemas sociales.*
+*Este proyecto es parte del proyecto modular 2025B del Centro Universitario de Ciencias Exactas e Ingenierías (CUCEI).*
