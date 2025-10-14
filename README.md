@@ -14,11 +14,14 @@ Una aplicación para Android e iOS que usa **Inteligencia Artificial** para ayud
 ## El Problema y La Solución 🐕‍🦺
 
 En México, el robo y extravío de mascotas es un problema significativo con opciones de búsqueda limitadas.
+<div align="left">
 
 **Laika** nace para resolver esto. Es una aplicación que utiliza **Redes Neuronales Convolucionales (CNN)** para:
+  
 1.  **Detectar el rostro de la mascota** en imágenes subidas por usuarios.
 2.  **Recopilar datos** que permitan a los usuarios reportar de manera efectiva a su mascota.
 3.  **Generar coincidencias** entre reportes de mascotas perdidas y encontradas.
+</div>
 
 Nuestro objetivo es mejorar la vida de las mascotas y contribuir a un ecosistema más equilibrado reduciendo la población de animales callejeros.
 
