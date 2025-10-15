@@ -49,6 +49,7 @@ Laika utiliza un modelo de **Red Neuronal Convolucional** optimizado para la det
   
 -   **Técnica Clave**: El enfoque está en el **_Face Embedding_** para generar un vector numérico único que represente la cara de la mascota, permitiendo comparaciones de similitud eficientes.
   <img src="https://placehold.co/1200x720/png" width="400" alt="Diagrama de Arquitectura o UML">
+  
 ---
 
 ## 🖼️ Screenshots
