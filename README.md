@@ -58,6 +58,7 @@ Laika utiliza un modelo de **Red Neuronal Convolucional** optimizado para la det
 <img src="https://placehold.co/720x1200/png" width="200" alt="App Inicio"/>      
 <img src="https://placehold.co/720x1200/png" width="200" alt="Pantalla Mascotas Perdidas"/>     
 <img src="https://placehold.co/720x1200/png" width="200" alt="Detalle de Reporte"/>  
+<img src="https://placehold.co/720x1200/png" width="200" alt="Notificaciones enviadas"/>  
 </p>
 
 ---
