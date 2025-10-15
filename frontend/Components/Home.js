@@ -19,7 +19,8 @@ const { width: windowWidth } = Dimensions.get('window');
 
 const Home = () => {
   const navigation = useNavigation();
-  const { userProfile, getFullName } = useUser();
+  //const { userProfile, getFullName } = useUser();
+	const { users, getFullName } = useUser();
   const colorIcon = "#000000"
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0); // Track the current image index
@@ -90,12 +91,12 @@ const Home = () => {
           {/* User Profile Section */}
           <View style={styles.welcomeSection}>
             <Image 
-              source={{ uri: userProfile.profileImage }} 
+              source={{ uri: users[0].profileImage }} 
               style={styles.profileImageHome} 
             />
             <View style={styles.welcomeTextContainer}>
               <Text style={styles.titleHome}>Bienvenido</Text>
-              <Text style={styles.userNameHome}>{userProfile.nombre}</Text>
+              <Text style={styles.userNameHome}>{users[0].nombre}</Text>
             </View>
           </View>
 

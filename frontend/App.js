@@ -257,253 +257,256 @@ const LoginScreen = () => {
         'La contraseña debe tener al menos 6 caracteres y una mayúscula.'
       );
     } else {
-      const token = await loginUser(correo, password);
-      if (!token) {
-        Alert.alert('Error', 'Correo o contraseña incorrectos.');
-        setPasswordError('Correo o contraseña incorrectos.');
-      }else{
-				//TODO: This doesn't work
-				setIsLoggedIn(true);
+			try{
+				const token = await loginUser(correo, password);
+				if (!token) {
+					Alert.alert('Error', 'Correo o contraseña incorrectos.');
+					setPasswordError('Correo o contraseña incorrectos.');
+				}else{
+					setIsLoggedIn(true);
+				}
+			}catch(error){
+				console.error('Login error:', error);
+				Alert.alert('Error', error.msg || error.message || 'Unknown error');
+				setPasswordError('Correo o contraseña incorrectos');
 			}
-    }
-  };
+		}
+	};
 
-  return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.containerApp}>
-        <ImageBackground
-          source={require('./assets/background.jpg')}
-          style={styles.card}
-          resizeMode="cover"
-          imageStyle={styles.backgroundImage}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.keyboardAvoidingView}>
-            <ScrollView
-              contentContainerStyle={styles.scrollContentContainer}
-              showsVerticalScrollIndicator={false}>
-              {/* Animated GIF */}
-              <Animated.View style={{
-                opacity: fadeAnim,
-                transform: [{ translateX: slideAnim }]
-              }}>
-                <Image
-                  source={require('./assets/Login.gif')}
-                  style={[
-                    styles.logoApp,
-                    { 
-                      width: 300,
-                      height: 300,
-                    }
-                  ]}
-                  contentFit="contain"
-                />
-              </Animated.View>
-              
-              <View style={[styles.formContainer, { paddingBottom: 120 }]}>
-                {/* Animated Title Text */}
-                <Animated.View style={{
-                  opacity: fadeAnim,
-                  transform: [{ translateX: titleAnim }]
-                }}>
-                  <Text style={styles.title}>Laika</Text>
-                  <Text style={styles.subtitle2}>
-                    Buscaremos a tu mascota en todo el universo.
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    {isSignUp
-                      ? 'Regístrate para buscar a tu peludito.'
-                      : 'Inicia sesión para continuar.'}
-                  </Text>
-                </Animated.View>
+	return (
+		<SafeAreaProvider>
+		<SafeAreaView style={styles.containerApp}>
+		<ImageBackground
+		source={require('./assets/background.jpg')}
+		style={styles.card}
+		resizeMode="cover"
+		imageStyle={styles.backgroundImage}>
+		<KeyboardAvoidingView
+		behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+		style={styles.keyboardAvoidingView}>
+		<ScrollView
+		contentContainerStyle={styles.scrollContentContainer}
+		showsVerticalScrollIndicator={false}>
+		{/* Animated GIF */}
+		<Animated.View style={{
+			opacity: fadeAnim,
+				transform: [{ translateX: slideAnim }]
+		}}>
+		<Image
+		source={require('./assets/Login.gif')}
+		style={[
+			styles.logoApp,
+			{ 
+				width: 300,
+				height: 300,
+			}
+		]}
+		contentFit="contain"
+		/>
+		</Animated.View>
 
-                {/* Animated Form Elements */}
-                <Animated.View style={{
-                  opacity: fadeAnim,
-                  transform: [{ translateX: formAnim }],
-                  width: '100%'
-                }}>
-                  {isSignUp ? (
-                    <Registro
-                      onCancel={() => setIsSignUp(false)}
-                    />
-                  ) : (
-                    <>
-                      <TextInput
-                        placeholder="Correo electrónico"
-                        style={styles.input}
-                        placeholderTextColor="#888888"
-                        value={correo}
-                        onChangeText={(text) => setCorreo(text)}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                      />
-                      <View style={styles.passwordContainer}>
-                        <TextInput
-                          placeholder="Contraseña"
-                          secureTextEntry={!showPassword}
-                          style={styles.inputPassword}
-                          placeholderTextColor="#888888"
-                          value={password}
-                          autoCapitalize="none"
-                          onChangeText={(text) => {
-                            setPassword(text);
-                            if (confirmPassword && text !== confirmPassword) {
-                              setPasswordError('La contraseña no coincide');
-                            } else {
-                              setPasswordError('');
-                            }
-                          }}
-                        />
-                        <TouchableOpacity
-                          onPress={() => setShowPassword(!showPassword)}
-                          style={styles.iconContainer}>
-                          <Ionicons
-                            name={showPassword ? 'eye-off' : 'eye'}
-                            size={24}
-                            color="#000000"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {passwordError ? (
-                        <Text style={styles.errorText}>{passwordError}</Text>
-                      ) : null}
-                      <TouchableOpacity
-                        style={styles.button}
-                        onPress={handleLogin}
-                      >
-                        <Text style={styles.buttonText}>
-                          Iniciar Sesión
-                        </Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                  <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-                    <Text style={styles.toggleText}>
-                      {isSignUp
-                        ? '¿Ya tienes cuenta? Inicia sesión'
-                        : '¿No tienes cuenta? Regístrate'}
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </ImageBackground>
-      </SafeAreaView>
-    </SafeAreaProvider>
-  );
+		<View style={[styles.formContainer, { paddingBottom: 120 }]}>
+		{/* Animated Title Text */}
+		<Animated.View style={{
+			opacity: fadeAnim,
+				transform: [{ translateX: titleAnim }]
+		}}>
+		<Text style={styles.title}>Laika</Text>
+		<Text style={styles.subtitle2}>
+		Buscaremos a tu mascota en todo el universo.
+		</Text>
+		<Text style={styles.subtitle}>
+		{isSignUp
+			? 'Regístrate para buscar a tu peludito.'
+			: 'Inicia sesión para continuar.'}
+		</Text>
+		</Animated.View>
+
+		{/* Animated Form Elements */}
+		<Animated.View style={{
+			opacity: fadeAnim,
+				transform: [{ translateX: formAnim }],
+				width: '100%'
+		}}>
+		{isSignUp ? (
+			<Registro
+			onCancel={() => setIsSignUp(false)}
+			/>
+		) : (
+			<>
+			<TextInput
+			placeholder="Correo electrónico"
+			style={styles.input}
+			placeholderTextColor="#888888"
+			value={correo}
+			onChangeText={(text) => setCorreo(text)}
+			autoCapitalize="none"
+			keyboardType="email-address"
+			/>
+			<View style={styles.passwordContainer}>
+			<TextInput
+			placeholder="Contraseña"
+			secureTextEntry={!showPassword}
+			style={styles.inputPassword}
+			placeholderTextColor="#888888"
+			value={password}
+			autoCapitalize="none"
+			onChangeText={(text) => {
+				setPassword(text);
+				if (confirmPassword && text !== confirmPassword) {
+					setPasswordError('La contraseña no coincide');
+				} else {
+					setPasswordError('');
+				}
+			}}
+			/>
+			<TouchableOpacity
+			onPress={() => setShowPassword(!showPassword)}
+			style={styles.iconContainer}>
+			<Ionicons
+			name={showPassword ? 'eye-off' : 'eye'}
+			size={24}
+			color="#000000"
+			/>
+			</TouchableOpacity>
+			</View>
+			{passwordError ? (
+				<Text style={styles.errorText}>{passwordError}</Text>
+			) : null}
+			<TouchableOpacity
+			style={styles.button}
+			onPress={handleLogin}
+			>
+			<Text style={styles.buttonText}>
+			Iniciar Sesión
+			</Text>
+			</TouchableOpacity>
+			</>
+		)}
+		<TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+		<Text style={styles.toggleText}>
+		{isSignUp
+			? '¿Ya tienes cuenta? Inicia sesión'
+			: '¿No tienes cuenta? Regístrate'}
+		</Text>
+		</TouchableOpacity>
+		</Animated.View>
+		</View>
+		</ScrollView>
+		</KeyboardAvoidingView>
+		</ImageBackground>
+		</SafeAreaView>
+		</SafeAreaProvider>
+	);
 };
 
 const AppContent = () => {
-  const { isLoggedIn } = useUser();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [isConnected, setIsConnected] = useState(true);
+	const { isLoggedIn } = useUser();
+	const fadeAnim = useRef(new Animated.Value(0)).current;
+	const [isConnected, setIsConnected] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected);
-    });
+	useEffect(() => {
+		const unsubscribe = NetInfo.addEventListener(state => {
+			setIsConnected(state.isConnected);
+		});
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+		return () => {
+			unsubscribe();
+		};
+	}, []);
 
-  useEffect(() => {
-		console.log("There was a chnage in the atmosphere!");
-    if (isLoggedIn) {
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isLoggedIn]);
-
-  console.log("Estado de autenticación:", isLoggedIn); // Añadir este log para depuración
-
-  if (!isConnected) {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6d3c3' }}>
-          <Ionicons name="wifi-outline" size={80} color="#b04f4f" />
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#b04f4f', marginTop: 20, textAlign: 'center' }}>
-            Sin conexión a Internet
-          </Text>
-          <Text style={{ fontSize: 16, color: '#b04f4f', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
-            Por favor, conéctate a una red para continuar usando Laika.
-          </Text>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
-  }
-
-  if (!isLoggedIn) {
- // Añadir este log para depuración
-    return <LoginScreen />;
-  }
+	useEffect(() => {
+		if (isLoggedIn) {
+			fadeAnim.setValue(0);
+			Animated.timing(fadeAnim, {
+				toValue: 1,
+				duration: 800,
+				useNativeDriver: true,
+			}).start();
+		}
+	}, [isLoggedIn]);
 
 
-  
-  return (
-    <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-              switch (route.name) {
-                case 'Inicio':
-                  iconName = focused ? 'home-sharp' : 'home-outline';
-                  break;
-                case 'Mascotas':
-                  iconName = focused ? 'paw-sharp' : 'paw-outline';
-                  break;
-                case 'Registrar':
-                  iconName = focused ? 'add-circle-sharp' : 'add-circle-sharp';
-                  break;
-                case 'Adopción':
-                  iconName = focused ? 'heart-sharp' : 'heart-outline';
-                  break;
-                case 'Configurar':
-                  iconName = focused ? 'settings-sharp' : 'settings-outline';
-                  break;
-                default:
-                  iconName = focused
-                    ? 'help-circle-sharp'
-                    : 'help-circle-outline';
-                  break;
-              }
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
+	if (!isConnected) {
+		return (
+			<SafeAreaProvider>
+			<SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6d3c3' }}>
+			<Ionicons name="wifi-outline" size={80} color="#b04f4f" />
+			<Text style={{ fontSize: 18, fontWeight: 'bold', color: '#b04f4f', marginTop: 20, textAlign: 'center' }}>
+			Sin conexión a Internet
+			</Text>
+			<Text style={{ fontSize: 16, color: '#b04f4f', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+			Por favor, conéctate a una red para continuar usando Laika.
+			</Text>
+			</SafeAreaView>
+			</SafeAreaProvider>
+		);
+	}
 
-            tabBarActiveTintColor: '#000',
-            tabBarInactiveTintColor: '#777',
-            headerTitle: 'Laika - Busca a tu mascota', // Cambia el título del header a "Laika"
-            headerTitleAlign: 'center', // Centra el título
-            headerStyle: { backgroundColor: '#E07978' },
-            headerTintColor: '#ffffffff',
-          })}>
-          
-          <Tab.Screen name="Inicio" component={HomeStack} />
-          <Tab.Screen name="Mascotas" component={MascotasScreen} />
-          <Tab.Screen name="Registrar" component={RegistrarScreen} />
-          <Tab.Screen name="Adopción" component={AdoptaScreen} />
-          <Tab.Screen name="Configurar" component={PerfilScreen} />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </Animated.View>
-  );
+	if (!isLoggedIn) {
+		// Añadir este log para depuración
+		return <LoginScreen />;
+	}
+
+
+
+	return (
+		<Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+		<NavigationContainer>
+		<Tab.Navigator
+		screenOptions={({ route }) => ({
+			tabBarIcon: ({ focused, color, size }) => {
+				let iconName;
+				switch (route.name) {
+					case 'Inicio':
+						iconName = focused ? 'home-sharp' : 'home-outline';
+						break;
+					case 'Mascotas':
+						iconName = focused ? 'paw-sharp' : 'paw-outline';
+						break;
+					case 'Registrar':
+						iconName = focused ? 'add-circle-sharp' : 'add-circle-sharp';
+						break;
+					case 'Adopción':
+						iconName = focused ? 'heart-sharp' : 'heart-outline';
+						break;
+					case 'Configurar':
+						iconName = focused ? 'settings-sharp' : 'settings-outline';
+						break;
+					default:
+						iconName = focused
+							? 'help-circle-sharp'
+							: 'help-circle-outline';
+						break;
+				}
+				return <Ionicons name={iconName} size={size} color={color} />;
+			},
+
+			tabBarActiveTintColor: '#000',
+			tabBarInactiveTintColor: '#777',
+			headerTitle: 'Laika - Busca a tu mascota', // Cambia el título del header a "Laika"
+			headerTitleAlign: 'center', // Centra el título
+			headerStyle: { backgroundColor: '#E07978' },
+			headerTintColor: '#ffffffff',
+		})}>
+
+		<Tab.Screen name="Inicio" component={HomeStack} />
+		<Tab.Screen name="Mascotas" component={MascotasScreen} />
+		<Tab.Screen name="Registrar" component={RegistrarScreen} />
+		<Tab.Screen name="Adopción" component={AdoptaScreen} />
+		<Tab.Screen name="Configurar" component={PerfilScreen} />
+		</Tab.Navigator>
+		</NavigationContainer>
+		</Animated.View>
+	);
 };
 
 const App = () => {
-  return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
-  );
+	return (
+		<UserProvider>
+		<AppContent />
+		</UserProvider>
+	);
 };
 
 export default App;

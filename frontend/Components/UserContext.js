@@ -40,18 +40,9 @@ export const UserProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 	const loginUser = async (email, password) => {
-		//const user = users.find(u => u.correo === email && u.contraseña === password);
-		//if (user) {
-		//  setCurrentUser(user);
-		//  setIsLoggedIn(true);
-		//  return user;
-		//}
-		//return null;
 		try {
-			console.log("CUM: ", apiUrl);
 			const res = await axios.post(`${apiUrl}/api/login`, { email, password });
 			const token = res.data.token;
-			console.log("STOP WAITING, SUCK COCK NOW");
 			return token;
 		} catch (err) {
 			console.error("Login failed:", err.response?.data || err.message);
@@ -79,7 +70,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ userProfile: currentUser, users, isLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName }}>
+    <UserContext.Provider value={{ userProfile: currentUser, users, isLoggedIn, setIsLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName }}>
       {children}
     </UserContext.Provider>
   );
