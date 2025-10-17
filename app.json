@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Laika-Busca_a_tu_mascota",
+    "slug": "Laika-Busca_a_tu_mascota",
+    "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "760f1a88-cefb-44dc-88bf-d805660ebc51"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
