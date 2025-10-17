@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { store } from 'store';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   ImageBackground,
@@ -259,11 +260,13 @@ const LoginScreen = () => {
     } else {
 			try{
 				const token = await loginUser(correo, password);
+
 				if (!token) {
 					Alert.alert('Error', 'Correo o contraseña incorrectos.');
 					setPasswordError('Correo o contraseña incorrectos.');
 				}else{
 					setIsLoggedIn(true);
+					store.save('jwt', token);
 				}
 			}catch(error){
 				console.error('Login error:', error);
