@@ -6,108 +6,141 @@ import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from './Estilos/Estilos';
 
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
 const Registro = ({ onCancel }) => {
-  const [locations, setLocations] = useState({ estados: [] });
-  const [selectedEstado, setSelectedEstado] = useState('');
-  const [selectedMunicipio, setSelectedMunicipio] = useState('Selecciona Municipio');
-  const [correo, setCorreo] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [apellidoPaterno, setApellidoPaterno] = useState('');
-  const [apellidoMaterno, setApellidoMaterno] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [image, setImage] = useState(null);
+	const [locations, setLocations] = useState({ estados: [] });
+	const [selectedEstado, setSelectedEstado] = useState('');
+	const [selectedMunicipio, setSelectedMunicipio] = useState('Selecciona Municipio');
+	const [correo, setCorreo] = useState('');
+	const [nombre, setNombre] = useState('');
+	const [apellidoPaterno, setApellidoPaterno] = useState('');
+	const [apellidoMaterno, setApellidoMaterno] = useState('');
+	const [telefono, setTelefono] = useState('');
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [passwordError, setPasswordError] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [image, setImage] = useState(null);
 
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/ButterBug404/ejemplo_de_un_json/refs/heads/main/lugares.json');
-        const data = await response.json();
-        setLocations(data);
-      } catch (error) {
-        Alert.alert("Error", "No se pudieron cargar las ubicaciones.");
-      }
-    };
-    fetchLocations();
-  }, []);
+	useEffect(() => {
+		const fetchLocations = async () => {
+			try {
+				const response = await fetch('https://raw.githubusercontent.com/ButterBug404/ejemplo_de_un_json/refs/heads/main/lugares.json');
+				const data = await response.json();
+				setLocations(data);
+			} catch (error) {
+				Alert.alert("Error", "No se pudieron cargar las ubicaciones.");
+			}
+		};
+		fetchLocations();
+	}, []);
 
-  const validatePassword = (password) => {
-    const passwordPattern = /^(?=.*[A-Z]).{6,}$/;
-    return passwordPattern.test(password);
-  };
+	const validatePassword = (password) => {
+		const passwordPattern = /^(?=.*[A-Z]).{6,}$/;
+		return passwordPattern.test(password);
+	};
 
-  const getMunicipiosByEstado = (estado) => {
-    if (!locations.estados || locations.estados.length === 0) {
-      return ['Selecciona Municipio'];
-    }
-    const estadoData = locations.estados.find(e => e.nombre === estado);
-    return estadoData ? ['Selecciona Municipio', ...estadoData.municipios] : ['Selecciona Municipio'];
-  };
+	const getMunicipiosByEstado = (estado) => {
+		if (!locations.estados || locations.estados.length === 0) {
+			return ['Selecciona Municipio'];
+		}
+		const estadoData = locations.estados.find(e => e.nombre === estado);
+		return estadoData ? ['Selecciona Municipio', ...estadoData.municipios] : ['Selecciona Municipio'];
+	};
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permiso denegado', 'Necesitamos permiso para acceder a tus fotos');
-      return;
-    }
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
+	const pickImage = async () => {
+		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (status !== 'granted') {
+			Alert.alert('Permiso denegado', 'Necesitamos permiso para acceder a tus fotos');
+			return;
+		}
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.5,
+		});
+		if (!result.canceled) {
+			setImage(result.assets[0].uri);
+		}
+	};
 
-  const removeImage = () => {
-    setImage(null);
-    Alert.alert("Foto eliminada", "La foto de perfil ha sido eliminada");
-  };
+	const removeImage = () => {
+		setImage(null);
+		Alert.alert("Foto eliminada", "La foto de perfil ha sido eliminada");
+	};
 
-  const handleRegister = () => {
-    if (
-      !correo ||
-      !password ||
-      !nombre ||
-      !apellidoPaterno ||
-      !apellidoMaterno ||
-      !telefono ||
-      selectedEstado === 'Selecciona Estado' ||
-      selectedMunicipio === 'Selecciona Municipio' ||
-      !selectedEstado ||
-      !selectedMunicipio
-    ) {
-      Alert.alert(
-        'Error',
-        'Por favor, completa todos los campos correctamente.'
-      );
-    } else if (!validatePassword(password)) {
-      setPasswordError(
-        'La contraseña debe tener al menos 6 caracteres y una mayúscula.'
-      );
-    } else if (password !== confirmPassword) {
-      setPasswordError('La contraseña no coincide.');
-    } else {
-      Alert.alert('Registro exitoso', 'Se ha registrado exitosamente.');
-      if (onCancel) onCancel();
-      setCorreo('');
-      setPassword('');
-      setConfirmPassword('');
-      setNombre('');
-      setApellidoPaterno('');
-      setApellidoMaterno('');
-      setTelefono('');
-      setSelectedEstado('Selecciona Estado');
-      setSelectedMunicipio('Selecciona Municipio');
-      setPasswordError('');
-      setImage(null);
-    }
-  };
+	const handleRegister = async () => {
+		if (
+			!correo ||
+			!password ||
+			!nombre ||
+			!apellidoPaterno ||
+			!apellidoMaterno ||
+			!telefono ||
+			!selectedEstado ||
+			selectedEstado === 'Selecciona Estado' ||
+			!selectedMunicipio ||
+			selectedMunicipio === 'Selecciona Municipio'
+		) {
+			Alert.alert('Error', 'Por favor, completa todos los campos correctamente.');
+			return;
+		}
+
+		if (!validatePassword(password)) {
+			setPasswordError('La contraseña debe tener al menos 6 caracteres y una mayúscula.');
+			return;
+		}
+
+		if (password !== confirmPassword) {
+			setPasswordError('La contraseña no coincide.');
+			return;
+		}
+
+		try {
+			const response = await fetch(`${apiUrl}/api/register`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: nombre,
+					pat_name: apellidoPaterno,
+					mat_name: apellidoMaterno,
+					email: correo,
+					password: password,
+					phone: telefono,
+					state: selectedEstado,
+					municipality: selectedMunicipio,
+					image: image || null,
+				}),
+			});
+
+			const data = await response.json();
+
+			if (response.ok) {
+				Alert.alert('Registro exitoso', 'Se ha registrado exitosamente.');
+				// reset form
+				setCorreo('');
+				setPassword('');
+				setConfirmPassword('');
+				setNombre('');
+				setApellidoPaterno('');
+				setApellidoMaterno('');
+				setTelefono('');
+				setSelectedEstado('');
+				setSelectedMunicipio('Selecciona Municipio');
+				setPasswordError('');
+				setImage(null);
+				if (onCancel) onCancel();
+			} else {
+				Alert.alert('Error', data.error || 'Algo salió mal al registrar el usuario.');
+			}
+		} catch (err) {
+			console.log(err);
+			Alert.alert('Error', 'No se pudo conectar al servidor.');
+		}
+	};
+
 
   return (
     <>

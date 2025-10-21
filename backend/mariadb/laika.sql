@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: mariadb
--- Tiempo de generación: 22-09-2025 a las 22:30:48
+-- Tiempo de generación: 20-10-2025 a las 23:37:30
 -- Versión del servidor: 12.0.2-MariaDB-ubu2404
 -- Versión de PHP: 8.2.27
 
@@ -70,9 +70,12 @@ CREATE TABLE `adoption_interest` (
 
 CREATE TABLE `laika_users` (
   `id` int(11) NOT NULL,
-  `username` varchar(150) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `pat_name` varchar(100) NOT NULL,
+  `mat_name` varchar(100) NOT NULL,
   `email` varchar(254) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `phone` varchar(20) NOT NULL,
   `state` varchar(100) NOT NULL,
   `municipality` varchar(100) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -82,17 +85,18 @@ CREATE TABLE `laika_users` (
 -- Volcado de datos para la tabla `laika_users`
 --
 
-INSERT INTO `laika_users` (`id`, `username`, `password_hash`, `email`, `state`, `municipality`, `created_at`) VALUES
-(1, 'user_1', '$argon2id$v=19$m=65536,t=3,p=4$NvYtk8FkTpE06oCT1ZBSgQ$Vuy+abqanDL0m4GHkQg2HYQd3mjkYwr5kj9kDygci3w', 'user1@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(2, 'user_2', '$argon2id$v=19$m=65536,t=3,p=4$NKaCp7lHEgwni/8NI6PGxQ$eLTrUpVcIFCZYfXBFzZl7daGuLcDKCZJrFZlr6AUAZU', 'user2@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(3, 'user_3', '$argon2id$v=19$m=65536,t=3,p=4$X9fEwoZEX9CYpNazlklxeA$0jSfHr8U9vypdnsBEEyUyPxg8LFTLmRQulWbPi2bQvU', 'user3@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(4, 'user_4', '$argon2id$v=19$m=65536,t=3,p=4$3/6ocJjPSETr5kwkC0gslw$2p7CfESftZY3+6oxcnpy2lCiz7p3F/8ZaNQp7O6tLQw', 'user4@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(5, 'user_5', '$argon2id$v=19$m=65536,t=3,p=4$3GBP5txAIB8mVWzrL1SwxA$KMFg05UN+9yZnNpGocPOBubRncCemkfVwINPPtD1b30', 'user5@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(6, 'user_6', '$argon2id$v=19$m=65536,t=3,p=4$PIHsv5phpoocERY16H140w$1p8SDns/3yccjlIeTg6kagXCYDmm2tOIDxaLGn8Qj/Y', 'user6@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(7, 'user_7', '$argon2id$v=19$m=65536,t=3,p=4$iZ+pEUR0/9SbHs9mBPYkpw$X7Im5+xc3BvC9oD5wBhQYWPgWWcCdfmzzP1bDSAgQg4', 'user7@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
-(8, 'user_8', '$argon2id$v=19$m=65536,t=3,p=4$YD2slOzMyJdw8q8UU1EIxg$CP5x4lDkQfbNfKqWgUynj+lCuzWfQvjgbNrPE1vDLw4', 'user8@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15'),
-(9, 'user_9', '$argon2id$v=19$m=65536,t=3,p=4$eG9Z9t3WIQXAemRc9I9qiQ$8PyifmQm3sZcEc8WQivZ0p5VRwANWImHrPM3YQ6nkfk', 'user9@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15'),
-(10, 'user_10', '$argon2id$v=19$m=65536,t=3,p=4$j/kyEnhW7kfQFubtfpLP2w$zpIiCb1Kq5DAocJ/Rh+H/RkpcxE60+5G5ueJfauGuew', 'user10@woofmail.com', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15');
+INSERT INTO `laika_users`
+  (`id`, `name`, `pat_name`, `mat_name`, `email`, `password_hash`, `phone`, `state`, `municipality`, `created_at`) VALUES
+(1, 'David', 'Guevara', 'Martínez', 'user1@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$NvYtk8FkTpE06oCT1ZBSgQ$Vuy+abqanDL0m4GHkQg2HYQd3mjkYwr5kj9kDygci3w', '3312345678', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(2, 'Andrea', 'Lopez', 'Ramirez', 'user2@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$NKaCp7lHEgwni/8NI6PGxQ$eLTrUpVcIFCZYfXBFzZl7daGuLcDKCZJrFZlr6AUAZU', '3323456789', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(3, 'Carlos', 'Hernandez', 'Perez', 'user3@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$X9fEwoZEX9CYpNazlklxeA$0jSfHr8U9vypdnsBEEyUyPxg8LFTLmRQulWbPi2bQvU', '3334567890', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(4, 'Lucía', 'Mendoza', 'Ortega', 'user4@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$3/6ocJjPSETr5kwkC0gslw$2p7CfESftZY3+6oxcnpy2lCiz7p3F/8ZaNQp7O6tLQw', '3345678901', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(5, 'Fernando', 'Castro', 'Jimenez', 'user5@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$3GBP5txAIB8mVWzrL1SwxA$KMFg05UN+9yZnNpGocPOBubRncCemkfVwINPPtD1b30', '3356789012', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(6, 'Mariana', 'Ruiz', 'Vargas', 'user6@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$PIHsv5phpoocERY16H140w$1p8SDns/3yccjlIeTg6kagXCYDmm2tOIDxaLGn8Qj/Y', '3367890123', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(7, 'Jorge', 'Torres', 'Navarro', 'user7@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$iZ+pEUR0/9SbHs9mBPYkpw$X7Im5+xc3BvC9oD5wBhQYWPgWWcCdfmzzP1bDSAgQg4', '3378901234', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:14'),
+(8, 'Sofía', 'Reyes', 'Gonzalez', 'user8@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$YD2slOzMyJdw8q8UU1EIxg$CP5x4lDkQfbNfKqWgUynj+lCuzWfQvjgbNrPE1vDLw4', '3389012345', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15'),
+(9, 'Miguel', 'Flores', 'Ramirez', 'user9@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$eG9Z9t3WIQXAemRc9I9qiQ$8PyifmQm3sZcEc8WQivZ0p5VRwANWImHrPM3YQ6nkfk', '3390123456', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15'),
+(10, 'Laura', 'Sanchez', 'Moreno', 'user10@woofmail.com', '$argon2id$v=19$m=65536,t=3,p=4$j/kyEnhW7kfQFubtfpLP2w$zpIiCb1Kq5DAocJ/Rh+H/RkpcxE60+5G5ueJfauGuew', '3391234567', 'Jalisco', 'Guadalajara', '2025-08-27 03:29:15');
 
 -- --------------------------------------------------------
 
@@ -159,7 +163,7 @@ ALTER TABLE `adoption_interest`
 --
 ALTER TABLE `laika_users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_username` (`username`),
+  ADD UNIQUE KEY `unique_username` (`nombre`),
   ADD UNIQUE KEY `unique_email` (`email`);
 
 --

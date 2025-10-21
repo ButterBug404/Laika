@@ -1,5 +1,4 @@
 import { StatusBar } from 'expo-status-bar';
-import { store } from 'store';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   ImageBackground,
