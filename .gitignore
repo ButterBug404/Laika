@@ -21,6 +21,9 @@ ios/build/
 .env
 *.key
 
+# Uploaded pictures
+/backend/pictures/
+
 # MariaDB data directories
 **/mysql/
 *.ibd

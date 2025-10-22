@@ -41,7 +41,11 @@ export async function insertUser(user){
 	try{
 		conn = await pool.getConnection();
 		const query = "INSERT INTO laika_users (name, pat_name, mat_name, email, password_hash, phone, state, municipality) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-		const rows = await conn.query(query, [user.name, user.pat_name, user.mat_name, user.email, user.password_hash, user.phone, user.state, user.municipality]);
+		const res = await conn.query(query, [user.name, user.pat_name, user.mat_name, user.email, user.password_hash, user.phone, user.state, user.municipality]);
+		if (res && res.insertId) {
+			return res.insertId;
+		}
+		return undefined;
 	}catch(err){
 		console.log("Error at inesrtUser, ", err)
 	}finally{
@@ -85,5 +89,18 @@ export async function insertMissingAlert(alert){
 		console.log("Error at insertMissingAlert, ", err);
 	}finally{
 		if(conn) conn.release();
+	}
+}
+
+export async function retrieveUserById(id) {
+	let conn;
+	try {
+		conn = await pool.getConnection();
+		const rows = await conn.query("SELECT id, name, pat_name, mat_name, email, phone, state, municipality, created_at FROM laika_users WHERE id = ?", [id]);
+		return rows[0];
+	} catch (err) {
+		throw err;
+	} finally {
+		if (conn) conn.end();
 	}
 }

@@ -7,6 +7,8 @@ import {
 	verifyPassword,
 } from "../utils/passwordUtils.js";
 import { generateToken } from "../utils/jwt.js";
+import fs from 'fs';
+import path from 'path';
 
 export const loginController = async (req, res) => {
   try {
@@ -45,11 +47,26 @@ export const userRegistrationController = async (req, res) => {
 			password_hash: hashedPassword,
 		}
 		console.log(newUser);
-		const registeredUser = await insertUser(newUser);
-		if(registeredUser != undefined){
+		const registeredUserId = await insertUser(newUser);
+
+		if(registeredUserId){
+            if (req.file) {
+                const tempPath = req.file.path;
+                const fileExtension = path.extname(req.file.originalname);
+                const newFileName = `${registeredUserId}${fileExtension}`;
+                const newPath = path.join(path.dirname(tempPath), newFileName);
+
+                fs.rename(tempPath, newPath, (err) => {
+                    if (err) {
+                        console.error("Error renaming file:", err);
+                        // Handle error, maybe delete the user? Or just log it.
+                        // For now, just log it. The user can re-upload later.
+                    }
+                });
+            }
 			res.status(200).json({success: "User registration was successful"});
 		}else{
-			res.status(200).json({failure: "Something went wrong when registering a new user"})
+			res.status(400).json({failure: "Something went wrong when registering a new user"})
 		}
 	}catch(err){
 		res.status(500).json({error: err.message, line: err.line});

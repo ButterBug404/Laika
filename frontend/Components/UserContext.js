@@ -2,7 +2,21 @@ import React, { createContext, useContext, useState } from 'react';
 import axios from "axios";
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
+import { jwtDecode } from 'jwt-decode';
+
 const UserContext = createContext();
+
+const userify = (user) => {
+	const newUser = {
+		id: user.id,
+		nombre: user.name,
+		apellidoPaterno: user.pat_name,
+		apellidoMaterno: user.mat_name,
+		correo: user.email,
+		telefono: user.phone,
+	}
+	return newUser;
+}
 
 export const useUser = () => {
   const context = useContext(UserContext);
@@ -13,7 +27,7 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [users, setUsers] = useState([
+  /*const [users, setUsers] = useState([
     {
       id: 1,
       nombre: 'Lizette Sarahi',
@@ -34,7 +48,8 @@ export const UserProvider = ({ children }) => {
       telefono: '5551234567',
       profileImage: null
     }
-  ]);
+  ]);*/
+	const [users, setUsers] = useState([]);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,35 +58,56 @@ export const UserProvider = ({ children }) => {
 		try {
 			const res = await axios.post(`${apiUrl}/api/login`, { email, password });
 			const token = res.data.token;
+
+			if (token) {
+				const decodedToken = jwtDecode(token);
+				console.log(decodedToken);
+				setCurrentUser(decodedToken);
+				setUsers(prev => [...prev, userify(decodedToken)]);
+				setIsLoggedIn(true);
+			}
+
 			return token;
 		} catch (err) {
 			console.error("Login failed:", err.response?.data || err.message);
 			throw err;
 		}
-  };
+	};
 
-  const logoutUser = () => {
-    setCurrentUser(null);
-    setIsLoggedIn(false);
-  };
+	const fetchUser = async (userId, token) => {
+		try {
+			const res = await axios.get(`${apiUrl}/api/users/${userId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			return res.data;
+		} catch (err) {
+			console.error("Fetch user failed:", err.response?.data || err.message);
+			throw err;
+		}
+	};
 
-  const updateUserProfile = (updates) => {
-    if (currentUser) {
-      setCurrentUser(prev => ({ ...prev, ...updates }));
-      setUsers(prevUsers => prevUsers.map(u => u.id === currentUser.id ? { ...u, ...updates } : u));
-    }
-  };
+	const logoutUser = () => {
+		setCurrentUser(null);
+		setIsLoggedIn(false);
+	};
 
-  const getFullName = () => {
-    if (currentUser) {
-      return `${currentUser.nombre} ${currentUser.apellidoPaterno} ${currentUser.apellidoMaterno}`;
-    }
-    return '';
-  };
+	const updateUserProfile = (updates) => {
+		if (currentUser) {
+			setCurrentUser(prev => ({ ...prev, ...updates }));
+			setUsers(prevUsers => prevUsers.map(u => u.id === currentUser.id ? { ...u, ...updates } : u));
+		}
+	};
 
-  return (
-    <UserContext.Provider value={{ userProfile: currentUser, users, isLoggedIn, setIsLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName }}>
-      {children}
-    </UserContext.Provider>
-  );
-};
+	const getFullName = () => {
+		if (currentUser) {
+			return `${currentUser.name} ${currentUser.pat_name} ${currentUser.mat_name}`;
+		}
+		return '';
+	};	
+	return (
+		<UserContext.Provider value={{ userProfile: currentUser, users, isLoggedIn, setIsLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName, fetchUser }}>
+		{children}
+		</UserContext.Provider>
+	);};

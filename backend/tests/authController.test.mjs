@@ -1,5 +1,22 @@
 import request from 'supertest';
 import {app} from '../src/app.js';
+import {jest} from '@jest/globals'
+
+// Mock your DB and utils modules
+jest.unstable_mockModule('../controllers/database.js', () => ({
+  insertUser: jest.fn(),
+  retrieveUser: jest.fn(),
+}));
+
+jest.unstable_mockModule('../utils/passwordUtils.js', () => ({
+  hashPassword: jest.fn((pw) => `hashed_${pw}`),
+  verifyPassword: jest.fn(),
+}));
+
+jest.unstable_mockModule('../utils/jwt.js', () => ({
+  generateToken: jest.fn(() => ['fake.token.value', 'key123']),
+}));
+
 import { insertUser, retrieveUser } from '../controllers/database.js';
 import { verifyPassword } from '../utils/passwordUtils.js';
 

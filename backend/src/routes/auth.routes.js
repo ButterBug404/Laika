@@ -1,9 +1,22 @@
 //External packages
 import express from 'express';
+import multer from 'multer';
 //Local packages
 import { loginController, userRegistrationController } from '../controllers/auth.controller.js';
 import { passwordValidator, emailValidator, validateRequest, textValidator, numValidator } from '../utils/validators.js';
 export const authRouter = express.Router();
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'backend/pictures/profile/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, file.fieldname + '-' + uniqueSuffix)
+  }
+})
+
+const upload = multer({ storage: storage })
 
 const registerUserValidators = [
 	textValidator('name'),
@@ -23,6 +36,7 @@ authRouter.post('/login',
 )
 
 authRouter.post('/register',
+	upload.single('profileImage'),
 	registerUserValidators,
 	validateRequest,
 	userRegistrationController
