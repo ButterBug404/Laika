@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from './Estilos/Estilos';
+import axios from 'axios';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -99,45 +100,55 @@ const Registro = ({ onCancel }) => {
 		}
 
 		try {
-			const response = await fetch(`${apiUrl}/api/register`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: nombre,
-					pat_name: apellidoPaterno,
-					mat_name: apellidoMaterno,
-					email: correo,
-					password: password,
-					phone: telefono,
-					state: selectedEstado,
-					municipality: selectedMunicipio,
-					image: image || null,
-				}),
+			const formData = new FormData();
+			formData.append('name', nombre);
+			formData.append('pat_name', apellidoPaterno);
+			formData.append('mat_name', apellidoMaterno);
+			formData.append('email', correo);
+			formData.append('password', password);
+			formData.append('phone', telefono);
+			formData.append('state', selectedEstado);
+			formData.append('municipality', selectedMunicipio);
+
+			if (image) {
+				const uriParts = image.split('.');
+				const fileType = uriParts[uriParts.length - 1];
+				formData.append('profileImage', {
+					uri: image,
+					name: `photo.${fileType}`,
+					type: `image/${fileType}`,
+				});
+			}
+
+			await axios.post(`${apiUrl}/api/register`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
 			});
 
-			const data = await response.json();
-
-			if (response.ok) {
-				Alert.alert('Registro exitoso', 'Se ha registrado exitosamente.');
-				// reset form
-				setCorreo('');
-				setPassword('');
-				setConfirmPassword('');
-				setNombre('');
-				setApellidoPaterno('');
-				setApellidoMaterno('');
-				setTelefono('');
-				setSelectedEstado('');
-				setSelectedMunicipio('Selecciona Municipio');
-				setPasswordError('');
-				setImage(null);
-				if (onCancel) onCancel();
-			} else {
-				Alert.alert('Error', data.error || 'Algo salió mal al registrar el usuario.');
-			}
+			Alert.alert('Registro exitoso', 'Se ha registrado exitosamente.');
+			// reset form
+			setCorreo('');
+			setPassword('');
+			setConfirmPassword('');
+			setNombre('');
+			setApellidoPaterno('');
+			setApellidoMaterno('');
+			setTelefono('');
+			setSelectedEstado('');
+			setSelectedMunicipio('Selecciona Municipio');
+			setPasswordError('');
+			setImage(null);
+			if (onCancel) onCancel();
 		} catch (err) {
 			console.log(err);
-			Alert.alert('Error', 'No se pudo conectar al servidor.');
+			if (err.response) {
+				Alert.alert('Error', err.response.data.error || 'Algo salió mal al registrar el usuario.');
+			} else if (err.request) {
+				Alert.alert('Error', 'No se pudo conectar al servidor.');
+			} else {
+				Alert.alert('Error', err.message);
+			}
 		}
 	};
 

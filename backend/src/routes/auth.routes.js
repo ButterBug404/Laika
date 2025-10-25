@@ -2,13 +2,20 @@
 import express from 'express';
 import multer from 'multer';
 //Local packages
-import { loginController, userRegistrationController } from '../controllers/auth.controller.js';
+import { loginController, userRegistrationController, logoutController } from '../controllers/auth.controller.js';
 import { passwordValidator, emailValidator, validateRequest, textValidator, numValidator } from '../utils/validators.js';
+import { authRequired } from '../utils/jwt.js';
 export const authRouter = express.Router();
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'backend/pictures/profile/')
+    cb(null, path.join(__dirname, '..', '..', 'pictures', 'profile'));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
@@ -41,3 +48,5 @@ authRouter.post('/register',
 	validateRequest,
 	userRegistrationController
 )
+
+authRouter.post('/logout', authRequired, logoutController);

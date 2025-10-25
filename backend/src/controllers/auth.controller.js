@@ -6,7 +6,8 @@ import {
 	hashPassword,
 	verifyPassword,
 } from "../utils/passwordUtils.js";
-import { generateToken } from "../utils/jwt.js";
+import { generateToken, invalidateToken } from "../utils/jwt.js";
+import { processProfileImage } from '../utils/imageProcessor.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -33,12 +34,32 @@ export const loginController = async (req, res) => {
   } catch (err) {
     console.error("LoginController error", err.message);
     return res.status(500).json({ error: err.message });
+	}
+};
+
+export const logoutController = (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+    }
+
+    const token = authorization.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+    }
+
+    invalidateToken(token);
+
+    return res.status(200).json({ success: "Logged out successfully" });
+  } catch (err) {
+    console.error("LogoutController error", err.message);
+    return res.status(500).json({ error: err.message });
   }
 };
 
 export const userRegistrationController = async (req, res) => {
 	try{
-		console.log("Worked!");
 		const user = req.body;
 		const hashedPassword = await hashPassword(user.password);
 		const { password, ...userNoPass} = user
@@ -46,25 +67,16 @@ export const userRegistrationController = async (req, res) => {
 			...userNoPass,
 			password_hash: hashedPassword,
 		}
-		console.log(newUser);
 		const registeredUserId = await insertUser(newUser);
 
 		if(registeredUserId){
-            if (req.file) {
-                const tempPath = req.file.path;
-                const fileExtension = path.extname(req.file.originalname);
-                const newFileName = `${registeredUserId}${fileExtension}`;
-                const newPath = path.join(path.dirname(tempPath), newFileName);
-
-                fs.rename(tempPath, newPath, (err) => {
-                    if (err) {
-                        console.error("Error renaming file:", err);
-                        // Handle error, maybe delete the user? Or just log it.
-                        // For now, just log it. The user can re-upload later.
-                    }
-                });
-            }
-			res.status(200).json({success: "User registration was successful"});
+			if (req.file) {
+				try {
+					await processProfileImage(req.file.path, registeredUserId);
+				} catch (imageErr) {
+					console.error("Image processing failed in controller:", imageErr.message);
+				}
+			}			res.status(200).json({success: "User registration was successful"});
 		}else{
 			res.status(400).json({failure: "Something went wrong when registering a new user"})
 		}

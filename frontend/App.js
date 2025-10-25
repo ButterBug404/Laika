@@ -19,7 +19,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker'; // Add this import for image picking
+import * as ImagePicker from 'expo-image-picker';
 import NetInfo from '@react-native-community/netinfo';
 
 // Archivos de componentes
@@ -116,7 +116,7 @@ const LoginScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [image, setImage] = useState(null); // Add state for storing the selected image
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -168,7 +168,6 @@ const LoginScreen = () => {
     return passwordPattern.test(password);
   };
 
-  // Function to get municipalities based on selected state
   const getMunicipiosByEstado = (estado) => {
     if (!locations.estados || locations.estados.length === 0) {
       return ['Selecciona Municipio'];
@@ -177,9 +176,7 @@ const LoginScreen = () => {
     return estadoData ? ['Selecciona Municipio', ...estadoData.municipios] : ['Selecciona Municipio'];
   };
 
-  // Add function to pick an image from gallery
   const pickImage = async () => {
-    // Ask for permission to access media library
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
@@ -187,7 +184,6 @@ const LoginScreen = () => {
       return;
     }
     
-    // Launch the image picker
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -200,7 +196,6 @@ const LoginScreen = () => {
     }
   };
 
-  // Add new function to remove the selected image
   const removeImage = () => {
     setImage(null);
     Alert.alert("Foto eliminada", "La foto de perfil ha sido eliminada");
@@ -242,7 +237,7 @@ const LoginScreen = () => {
       setSelectedEstado('Selecciona Estado');
       setSelectedMunicipio('Selecciona Municipio');
       setPasswordError('');
-      setImage(null); // Clear the selected image
+      setImage(null);
     }
   };
 

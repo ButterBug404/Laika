@@ -19,8 +19,7 @@ const { width: windowWidth } = Dimensions.get('window');
 
 const Home = () => {
   const navigation = useNavigation();
-  //const { userProfile, getFullName } = useUser();
-	const { users, getFullName } = useUser();
+  const { userProfile } = useUser();
   const colorIcon = "#000000"
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0); // Track the current image index
@@ -89,16 +88,18 @@ const Home = () => {
       <SafeAreaView style={styles.containerHome}>
         <ScrollView>
           {/* User Profile Section */}
-          <View style={styles.welcomeSection}>
-            <Image 
-              source={{ uri: users[0].profileImage }} 
-              style={styles.profileImageHome} 
-            />
-            <View style={styles.welcomeTextContainer}>
-              <Text style={styles.titleHome}>Bienvenido</Text>
-              <Text style={styles.userNameHome}>{users[0].nombre}</Text>
+          {userProfile && (
+            <View style={styles.welcomeSection}>
+              <Image 
+                source={{ uri: userProfile.profileImage }} 
+                style={styles.profileImageHome} 
+              />
+              <View style={styles.welcomeTextContainer}>
+                <Text style={styles.titleHome}>Bienvenido</Text>
+                <Text style={styles.userNameHome}>{userProfile.nombre}</Text>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Carrusel */}
           <View style={styles.scrollContainerHome}>
