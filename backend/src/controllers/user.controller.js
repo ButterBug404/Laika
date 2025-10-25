@@ -30,7 +30,7 @@ export const getProfilePicture = async (req, res) => {
         }
 
         const profilePictureDir = path.join(__dirname, '../../pictures/profile');
-        const potentialExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
+                const potentialExtensions = ['.jpeg', '.jpg', '.png', '.webp'];
         let picturePath = null;
 
         for (const ext of potentialExtensions) {
