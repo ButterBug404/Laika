@@ -36,35 +36,15 @@ const Adopta = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('https://raw.githubusercontent.com/ButterBug404/ejemplo_de_un_json/refs/heads/main/Dato_adopciones.json');
-        const data = await response.json();
-        
-        // Process the external data to match our application structure
-        const processExternalMascotas = data.mascotas.map(mascota => {
-          // Find the corresponding contact for this pet
-          let contacto;
-          if (mascota.contactoId.startsWith('e')) {
-            contacto = data.contactos.empresas.find(e => e.id === mascota.contactoId);
-          } else {
-            contacto = data.contactos.personales.find(p => p.id === mascota.contactoId);
-          }
-          
-          // Return the mascota with proper structure
-          return {
-            ...mascota,
-            imagen: { uri: mascota.imagen },
-            contacto: contacto,
-            isUserPet: false // Mark as not user's own pet
-          };
-        });
         
         // Get user's local pets for adoption - FILTER OUT ADOPTED PETS
-        const userPets = getMascotas().filter(pet => 
+        const userPets = await getMascotas();
+        const availablePets = userPets.filter(pet => 
           pet.tipoRegistro === 'adopcion' && pet.estado !== 'Adoptada'
         );
         
         // Process user pets to match structure and mark them as user's own
-        const processedUserPets = userPets.map(pet => ({
+        const processedUserPets = availablePets.map(pet => ({
           ...pet,
           contacto: {
             tipo: 'personal',
@@ -75,9 +55,8 @@ const Adopta = () => {
           isUserPet: true // Mark as user's own pet
         }));
         
-        // Combine both sets of pets
-        setMascotasData([...processExternalMascotas, ...processedUserPets]);
-        setContactosData(data.contactos);
+        // Set the processed pets
+        setMascotasData(processedUserPets);
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);

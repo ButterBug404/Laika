@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
+import ProfileImage from './ProfileImage';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
+
 
 // Import shared data
 import { getMascotas } from './MascotasData';
@@ -24,24 +25,32 @@ const Perfil = () => {
 
   const emailDomains = ['gmail.com', 'hotmail.com', 'outlook.com'];
 
-  // Load and filter mascotas data when component mounts or when screen is focused
-  useEffect(() => {
-    if (isFocused) {
-      // Get all pets
-      const allPets = getMascotas();
-      
-      // Filter out adoption and found pets - only show user's own pets
-      const userPets = allPets.filter(pet => 
-        pet.tipoRegistro !== 'adopcion' && 
-        pet.tipoRegistro !== 'encontrada'
-      );
-      
-      setPerros(userPets);
-    }
-  }, [isFocused]);
+	useEffect(() => {
+		if (isFocused) {
+			const fetchPets = async () => {
+				const allPets = await getMascotas();
+				console.log('Pets fetched:', allPets);
+
+				if (Array.isArray(allPets)) {
+					const userPets = allPets.filter(
+
+						pet => pet.tipoRegistro !== 'adopcion' && pet.tipoRegistro !== 'encontrada'
+					);
+					setPerros(userPets);
+				} else {
+
+					console.warn('Expected array, got:', typeof allPets);
+					setPerros([]);
+				}
+			};
+
+			fetchPets();
+		}
+	}, [isFocused]);
 
   useEffect(() => {
     setEditableProfile(userProfile);
+		console.log("FUCC: ", userProfile); 
     // Split email when component mounts or userProfile changes
     const emailParts = userProfile.correo.split('@');
     if (emailParts.length === 2) {
@@ -55,22 +64,7 @@ const Perfil = () => {
     return perros.filter(pet => pet.estado === status);
   };
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
 
-    if (!result.canceled) {
-      if (isEditing) {
-        setEditableProfile(prev => ({ ...prev, profileImage: result.assets[0].uri }));
-      } else {
-        updateUserProfile({ profileImage: result.assets[0].uri });
-      }
-    }
-  };
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -195,15 +189,12 @@ const Perfil = () => {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.containerPerfil}>
         {/* Profile Image */}
-        <TouchableOpacity onPress={pickImage} style={styles.profileImageContainer}>
-          <Image 
-            source={{ uri: isEditing ? editableProfile.profileImage : userProfile.profileImage }} 
-            style={styles.profileImage} 
-          />
-          <View style={styles.editImageOverlay}>
-            <Ionicons name="camera" size={24} color="white" />
-          </View>
-        </TouchableOpacity>
+        <ProfileImage 
+          user_id={userProfile.id}
+          style={styles.profileImage} 
+          editable={true}
+          onImageChange={(uri) => setEditableProfile(prev => ({ ...prev, profileImage: uri }))}
+        />
 
         {/* User Information */}
         <View style={styles.userInfoContainer}>
@@ -606,29 +597,12 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: 'semibold',
   },
-  profileImageContainer: {
-    position: 'relative',
-    marginBottom: 20,
-  },
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
     borderColor: '#e07978',
-  },
-  editImageOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 15,
-    padding: 5,
-  },
-  apellidoPerfil: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 5,
   },
   emailDisplayContainer: {
     flex: 1,

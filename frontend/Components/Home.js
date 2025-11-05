@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useUser } from './UserContext';
+import ProfileImage from './ProfileImage';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -90,10 +91,7 @@ const Home = () => {
           {/* User Profile Section */}
           {userProfile && (
             <View style={styles.welcomeSection}>
-              <Image 
-                source={{ uri: userProfile.profileImage }} 
-                style={styles.profileImageHome} 
-              />
+              <ProfileImage user_id={userProfile.id} style={styles.profileImageHome} />
               <View style={styles.welcomeTextContainer}>
                 <Text style={styles.titleHome}>Bienvenido</Text>
                 <Text style={styles.userNameHome}>{userProfile.nombre}</Text>

@@ -30,7 +30,6 @@ export const loginController = async (req, res) => {
 
     const [token] = generateToken(user);
     return res.status(200).json({ token });
-
   } catch (err) {
     console.error("LoginController error", err.message);
     return res.status(500).json({ error: err.message });

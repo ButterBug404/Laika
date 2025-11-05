@@ -43,6 +43,23 @@ export const numValidator = (fieldName, options = {}) => {
 	return chain;
 };
 
+export const boolValidator = (fieldName, options = {}) => {
+  const chain = body(fieldName)
+    .optional({ checkFalsy: options.optional ?? true })
+    .exists().withMessage(`Field "${fieldName}" was expected`)
+    .trim()
+    .toLowerCase()
+    .isIn(["true", "false", "1", "0"])
+    .withMessage(`Field "${fieldName}" must be a boolean`)
+    .customSanitizer(value => {
+      return value === "true" || value === "1";
+    });
+
+  if (options.escape) chain.escape();
+  return chain;
+};
+
+
 function toMariaDbDateTime(isoString) {
   const d = new Date(isoString);
   if (isNaN(d.getTime())) throw new Error("Invalid date");
@@ -83,6 +100,7 @@ export function pointValidator(fieldName = "point") {
 export function validateRequest(req, res, next){
 	const errors = validationResult(req);
 	if (!errors.isEmpty()){
+		console.error('Validation errors:', errors.array());
 		return res.status(400).json({errors: errors.array()});
 	}
 	next();

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState } from 'react';
 import axios from "axios";
-import { Buffer } from 'buffer/';
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 import { jwtDecode } from 'jwt-decode';
@@ -17,35 +16,18 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [profileImageUri, setProfileImageUri] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 	const loginUser = async (email, password) => {
+		console.log("API URL:", apiUrl);
 		try {
 			const res = await axios.post(`${apiUrl}/api/login`, { email, password });
 			const token = res.data.token;
-
-			if (token) {
-				const decodedToken = jwtDecode(token);
-				setCurrentUser(decodedToken);
-
-				try {
-					const imageRes = await axios.get(`${apiUrl}/api/profile-picture`, {
-						headers: { Authorization: `Bearer ${token}` },
-						responseType: 'arraybuffer'
-					});
-					const imageBase64 = Buffer.from(imageRes.data, 'binary').toString('base64');
-					const imageUri = `data:${imageRes.headers['content-type']};base64,${imageBase64}`;
-					console.log("OK");
-					console.log(imageUri);
-					setProfileImageUri(imageUri);
-				} catch (imgErr) {
-					console.error("Could not fetch profile image.", imgErr);
-					setProfileImageUri(null);
-				}
-				setIsLoggedIn(true);
-			}
-			return token;
+							if (token) {
+							const decodedToken = jwtDecode(token);
+							setCurrentUser(decodedToken);
+							setIsLoggedIn(true);
+							}			return token;
 		} catch (err) {
 			console.error("Login failed:", err.response?.data || err.message);
 			throw err;
@@ -66,7 +48,6 @@ export const UserProvider = ({ children }) => {
 
 	const logoutUser = () => {
 		setCurrentUser(null);
-		setProfileImageUri(null);
 		setIsLoggedIn(false);
 	};
 
@@ -91,8 +72,7 @@ export const UserProvider = ({ children }) => {
 		apellidoPaterno: currentUser.pat_name,
 		apellidoMaterno: currentUser.mat_name,
 		correo: currentUser.email,
-		telefono: currentUser.phone,
-		profileImage: profileImageUri
+		telefono: currentUser.phone
 	} : null;
 
 	return (
