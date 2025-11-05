@@ -75,7 +75,6 @@ const ProfileImage = ({ user_id, style, contentFit = 'cover', editable = false, 
 		<TouchableOpacity onPress={pickImage} disabled={!editable}>
 			<Image 
 				source={imageSource || require('../assets/icon.png')}
-				cachePolicy="none"
 				style={style}
 				contentFit={contentFit}
 				transition={200}

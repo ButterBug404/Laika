@@ -6,7 +6,11 @@ const store = {
   },
   async getValueFor(key) {
     return await SecureStore.getItemAsync(key);
-  }
+  },
+	async delete(key) {
+		await SecureStore.deleteItemAsync(key);
+
+	}
 };
 
 export default store;

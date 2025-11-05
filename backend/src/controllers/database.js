@@ -121,6 +121,19 @@ export async function retrieveUserById(id) {
 	}
 }
 
+export async function retrievePasswordById(id) {
+	let conn;
+	try {
+		conn = await pool.getConnection();
+		const rows = await conn.query("SELECT password_hash FROM laika_users WHERE id = ?", [id]);
+		return rows[0];
+	} catch (err) {
+		throw err;
+	} finally {
+		if (conn) conn.end();
+	}
+}
+
 export async function retrievePets(id) {
 	let conn;
 	try {
@@ -199,6 +212,33 @@ export async function deletePetAlert(id) {
         return res;
     } catch (err) {
         console.log("Error at deletePetAlert, ", err);
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+export async function updateUser(id, user) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = "UPDATE laika_users SET name = ?, pat_name = ?, mat_name = ?, email = ?, phone = ? WHERE id = ?";
+        const res = await conn.query(query, [user.name, user.pat_name, user.mat_name, user.email, user.phone, id]);
+        return res;
+    } catch (err) {
+        console.log("Error at updateUser, ", err);
+    } finally {
+        if (conn) conn.release();
+    }
+}
+export async function updatePassword(id, password_hash) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = "UPDATE laika_users SET password_hash = ? WHERE id = ?";
+        const res = await conn.query(query, [password_hash, id]);
+        return res;
+    } catch (err) {
+        console.log("Error at updateUser, ", err);
     } finally {
         if (conn) conn.release();
     }

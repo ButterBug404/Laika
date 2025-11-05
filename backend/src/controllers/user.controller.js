@@ -1,10 +1,50 @@
-import { retrieveUserById } from "./database.js";
+import { retrieveUserById, updateUser, updatePassword, retrievePasswordById } from "./database.js";
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { hashPassword, verifyPassword } from '../utils/passwordUtils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+export const updatePasswordController = async (req, res) => {
+	try {
+		const userId = req.params.id || req.user.id;
+		const { old_password, new_password } = req.body;
+
+		console.log(userId);
+		const query_result = await retrievePasswordById(userId);
+		console.log(query_result);
+		if (!query_result || query_result.length === 0) {
+			return res.status(404).json({ failure: "User not found" });
+		}
+
+		const passwordMatch = await verifyPassword(old_password, query_result.password_hash);
+		if (!passwordMatch) {
+			return res.status(401).json({ failure: "Incorrect old password" });
+		}
+
+		const hashedPassword = await hashPassword(new_password);
+		await updatePassword(userId, hashedPassword);
+
+		res.status(200).json({ success: "Password updated successfully" });
+	} catch (err) {
+		console.error("updatePasswordController error", err.message);
+		return res.status(500).json({ error: err.message });
+	}
+};
+
+export const updateUserProfile = async (req, res) => {
+	try {
+		const { id } = req.user;
+		const { name, pat_name, mat_name, email, phone } = req.body;
+		await updateUser(id, { name, pat_name, mat_name, email, phone });
+		res.status(200).json({ success: "User updated successfully" });
+	} catch (err) {
+		console.error("updateUserProfile error", err.message);
+		return res.status(500).json({ error: err.message });
+	}
+};
 
 export const getProfilePictureController = async (req, res) => {
 	try {

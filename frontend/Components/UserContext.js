@@ -46,11 +46,11 @@ export const UserProvider = ({ children }) => {
 		}
 	};
 
-	const logoutUser = () => {
-		setCurrentUser(null);
-		setIsLoggedIn(false);
-	};
-
+	  const logoutUser = () => {
+	    setCurrentUser(null);
+	    setIsLoggedIn(false);
+	    store.delete('jwt');
+	  };
 	const updateUserProfile = (updates) => {
 		if (currentUser) {
 			// This only updates the local token data, backend update would need another API call

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import ProfileImage from './ProfileImage';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
-
+import axios from 'axios';
+import store from '../utils/store';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 // Import shared data
-import { getMascotas } from './MascotasData';
 import { useUser } from './UserContext';
+
+import { getMascotas } from './MascotasData';
 
 const Perfil = () => {
   const navigation = useNavigation();
@@ -18,45 +20,27 @@ const Perfil = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [editableProfile, setEditableProfile] = useState(userProfile);
-  const [emailUsername, setEmailUsername] = useState('');
-  const [emailDomain, setEmailDomain] = useState('gmail.com');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const emailDomains = ['gmail.com', 'hotmail.com', 'outlook.com'];
+  useEffect(() => {
+    if (isFocused && userProfile && userProfile.id) {
+      const fetchPets = async () => {
+        try {
+					const allMascotas = await getMascotas();
+          setPerros(allMascotas);
+        } catch (err) {
+          console.error("Failed to fetch pets:", err.response?.data || err.message);
+        }
+      };
 
-	useEffect(() => {
-		if (isFocused) {
-			const fetchPets = async () => {
-				const allPets = await getMascotas();
-				console.log('Pets fetched:', allPets);
-
-				if (Array.isArray(allPets)) {
-					const userPets = allPets.filter(
-
-						pet => pet.tipoRegistro !== 'adopcion' && pet.tipoRegistro !== 'encontrada'
-					);
-					setPerros(userPets);
-				} else {
-
-					console.warn('Expected array, got:', typeof allPets);
-					setPerros([]);
-				}
-			};
-
-			fetchPets();
-		}
-	}, [isFocused]);
+      fetchPets();
+    }
+  }, [isFocused, userProfile.id]);
 
   useEffect(() => {
     setEditableProfile(userProfile);
-		console.log("FUCC: ", userProfile); 
-    // Split email when component mounts or userProfile changes
-    const emailParts = userProfile.correo.split('@');
-    if (emailParts.length === 2) {
-      setEmailUsername(emailParts[0]);
-      setEmailDomain(emailParts[1]);
-    }
   }, [userProfile]);
 
   // Filter pets by state for display
@@ -64,41 +48,62 @@ const Perfil = () => {
     return perros.filter(pet => pet.estado === status);
   };
 
-
-
-  const handleEditToggle = () => {
+  const handleEditToggle = async () => {
     if (isEditing) {
-      // Construct full email from username and domain
-      const fullEmail = `${emailUsername}@${emailDomain}`;
-      const updatedProfile = { ...editableProfile, correo: fullEmail };
-      
+      // Check if there were any changes
+      const hasChanges = 
+        editableProfile.nombre !== userProfile.nombre ||
+        editableProfile.apellidoPaterno !== userProfile.apellidoPaterno ||
+        editableProfile.apellidoMaterno !== userProfile.apellidoMaterno ||
+        editableProfile.correo !== userProfile.correo ||
+        editableProfile.telefono !== userProfile.telefono;
+
+      if (!hasChanges) {
+        Alert.alert('Sin Cambios', 'No has realizado ningún cambio en tu perfil.');
+        setIsEditing(false);
+        return;
+      }
+
       // Validación básica
-      const emailPattern = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook)\.com$/;
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       const phonePattern = /^\d+$/;
 
-      if (!updatedProfile.nombre || !updatedProfile.apellidoPaterno || !updatedProfile.apellidoMaterno || !emailUsername || !updatedProfile.telefono) {
+      if (!editableProfile.nombre || !editableProfile.apellidoPaterno || !editableProfile.apellidoMaterno || !editableProfile.correo || !editableProfile.telefono) {
         Alert.alert('Error', 'Por favor, completa todos los campos correctamente.');
         return;
       }
 
-      if (!emailPattern.test(fullEmail)) {
+      if (!emailPattern.test(editableProfile.correo)) {
         Alert.alert('Error', 'Por favor, introduce un correo válido.');
         return;
       }
 
-      if (!phonePattern.test(updatedProfile.telefono)) {
+      if (!phonePattern.test(editableProfile.telefono)) {
         Alert.alert('Error', 'Por favor, introduce un número de teléfono válido.');
         return;
       }
 
-      updateUserProfile(updatedProfile);
+      try {
+        const token = await getValueFor('jwt');
+        await axios.put(`${apiUrl}/api/update-user`, {
+          name: editableProfile.nombre,
+          pat_name: editableProfile.apellidoPaterno,
+          mat_name: editableProfile.apellidoMaterno,
+          email: editableProfile.correo,
+          phone: editableProfile.telefono,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        updateUserProfile(editableProfile);
+        Alert.alert('Éxito', 'Perfil actualizado correctamente.');
+      } catch (err) {
+        console.error("Failed to update profile:", err.response?.data || err.message);
+        Alert.alert('Error', 'No se pudo actualizar el perfil.');
+      }
     } else {
       setEditableProfile(userProfile);
-      const emailParts = userProfile.correo.split('@');
-      if (emailParts.length === 2) {
-        setEmailUsername(emailParts[0]);
-        setEmailDomain(emailParts[1]);
-      }
     }
     setIsEditing(!isEditing);
   };
@@ -106,18 +111,18 @@ const Perfil = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditableProfile(userProfile);
-    const emailParts = userProfile.correo.split('@');
-    if (emailParts.length === 2) {
-      setEmailUsername(emailParts[0]);
-      setEmailDomain(emailParts[1]);
-    }
   };
 
-  const handleEditPassword = () => {
+  const handleEditPassword = async () => {
     if (isEditingPassword) {
-      // Validar y guardar la nueva contraseña
+      // Validar campos
+      if (!oldPassword) {
+        Alert.alert('Error', 'Por favor, introduce tu contraseña actual.');
+        return;
+      }
+
       if (newPassword.length < 8) {
-        Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres.');
+        Alert.alert('Error', 'La nueva contraseña debe tener al menos 8 caracteres.');
         return;
       }
 
@@ -126,15 +131,37 @@ const Perfil = () => {
         return;
       }
 
-      // Actualizar la contraseña en el perfil del usuario
-      updateUserProfile({ contraseña: newPassword });
-      
-      // Limpiar campos y salir del modo de edición
-      setNewPassword('');
-      setConfirmPassword('');
-      setIsEditingPassword(false);
-      
-      Alert.alert('Éxito', 'Tu contraseña ha sido actualizada.');
+      if (oldPassword === newPassword) {
+        Alert.alert('Error', 'La nueva contraseña debe ser diferente a la actual.');
+        return;
+      }
+
+      try {
+        const token = await store.getValueFor('jwt');
+        await axios.put(`${apiUrl}/api/update-password`, {
+          old_password: oldPassword,
+          new_password: newPassword,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        // Limpiar campos y salir del modo de edición
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setIsEditingPassword(false);
+        
+        Alert.alert('Éxito', 'Tu contraseña ha sido actualizada.');
+      } catch (err) {
+        console.error("Failed to update password:", err.response?.data || err.message);
+        if (err.response?.status === 401) {
+          Alert.alert('Error', 'La contraseña actual es incorrecta.');
+        } else {
+          Alert.alert('Error', 'No se pudo actualizar la contraseña.');
+        }
+      }
     } else {
       // Entrar en modo de edición de contraseña
       setIsEditingPassword(true);
@@ -142,6 +169,7 @@ const Perfil = () => {
   };
 
   const cancelPasswordEdit = () => {
+    setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
     setIsEditingPassword(false);
@@ -159,8 +187,19 @@ const Perfil = () => {
         {
           text: 'Cerrar Sesión',
           style: 'destructive',
-          onPress: () => {
-            logoutUser(); // Use logoutUser from context
+          onPress: async () => {
+            try {
+              const token = await store.getValueFor('jwt');
+              await axios.post(`${apiUrl}/api/logout`, {}, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+            } catch (error) {
+              console.error("Failed to logout:", error.response?.data || error.message);
+            } finally {
+              logoutUser(); // Use logoutUser from context
+            }
           },
         },
       ]
@@ -172,22 +211,17 @@ const Perfil = () => {
     navigation.navigate('Mascotas', { perroId: perro.id });
   };
 
-  const renderEmailDisplay = () => {
-    const emailParts = userProfile.correo.split('@');
-    if (emailParts.length === 2) {
-      return (
-        <View style={styles.emailDisplayContainer}>
-          <Text style={styles.emailUsername}>{emailParts[0]}</Text>
-          <Text style={styles.emailDomain}>@{emailParts[1]}</Text>
-        </View>
-      );
-    }
-    return <Text style={styles.infoValue}>{userProfile.correo}</Text>;
-  };
-
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.containerPerfil}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.containerPerfil}>
         {/* Profile Image */}
         <ProfileImage 
           user_id={userProfile.id}
@@ -247,26 +281,16 @@ const Perfil = () => {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Correo:</Text>
             {isEditing ? (
-              <View style={styles.emailEditContainer}>
-                <TextInput
-                  style={styles.emailUsernameInput}
-                  value={emailUsername}
-                  onChangeText={setEmailUsername}
-                  placeholder="usuario"
-                />
-                <Text style={styles.atSymbol}>@</Text>
-                <Picker
-                  selectedValue={emailDomain}
-                  style={styles.domainPicker}
-                  onValueChange={setEmailDomain}
-                >
-                  {emailDomains.map((domain) => (
-                    <Picker.Item key={domain} label={domain} value={domain} />
-                  ))}
-                </Picker>
-              </View>
+              <TextInput
+                style={styles.inputPerfil}
+                value={editableProfile.correo}
+                onChangeText={(text) => setEditableProfile(prev => ({ ...prev, correo: text }))}
+                placeholder="correo@ejemplo.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             ) : (
-              renderEmailDisplay()
+              <Text style={styles.infoValue}>{userProfile.correo}</Text>
             )}
           </View>
 
@@ -315,14 +339,21 @@ const Perfil = () => {
           disabled={isEditing}
         >
           <Text style={styles.textoBotonPerfil}>
-            {isEditingPassword ? 'Guardar Contraseña' : 'Editar Contraseña'}
+            {isEditingPassword ? 'Guardar Contraseña' : 'Cambiar Contraseña'}
           </Text>
         </TouchableOpacity>
 
         {/* Formulario de edición de contraseña */}
         {isEditingPassword && (
           <View style={styles.passwordEditContainer}>
-            <Text style={styles.passwordEditTitle}>Editar Contraseña</Text>
+            <Text style={styles.passwordEditTitle}>Cambiar Contraseña</Text>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Contraseña actual"
+              secureTextEntry
+              value={oldPassword}
+              onChangeText={setOldPassword}
+            />
             <TextInput
               style={styles.passwordInput}
               placeholder="Nueva contraseña"
@@ -413,13 +444,14 @@ const Perfil = () => {
         
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    paddingBottom: 40,
   },
   containerPerfil: {
     flex: 1,
@@ -427,17 +459,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     textAlign: 'center',
     padding: 20,
+    paddingTop: 30,
   },
   userInfoContainer: {
     width: '100%',
-    marginVertical: 20,
+    marginVertical: 25,
     paddingHorizontal: 10,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
-    paddingVertical: 10,
+    marginBottom: 8,
+    paddingVertical: 12,
     borderBottomWidth: 2,
     borderBottomColor: '#E0E0E0',
   },
@@ -457,12 +490,13 @@ const styles = StyleSheet.create({
   },
   inputPerfil: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     borderRadius: 5,
     backgroundColor: '#FFF',
     borderColor: '#DDD',
     borderWidth: 1,
     textAlign: 'right',
+    minHeight: 44,
   },
   cancelButton: {
     marginTop: 10,
@@ -544,10 +578,10 @@ const styles = StyleSheet.create({
   },
   botonPerfil: {
     backgroundColor: '#000000ff',
-    paddingVertical: 12,
+    paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 15,
+    marginTop: 20,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 10, height: 5 },
@@ -567,10 +601,11 @@ const styles = StyleSheet.create({
   },
   botonCerrarSesion: {
     backgroundColor: '#000000ff',
-    paddingVertical: 12,
+    paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 15,
+    marginTop: 20,
+    marginBottom: 30,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -604,53 +639,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#e07978',
   },
-  emailDisplayContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  emailUsername: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'right',
-    fontWeight: 'semibold',
-  },
-  emailDomain: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'right',
-    fontWeight: 'semibold',
-  },
-  emailEditContainer: {
-    flexDirection: 'row',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  emailUsernameInput: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 5,
-    backgroundColor: '#FFF',
-    borderColor: '#DDD',
-    borderWidth: 1,
-    textAlign: 'right',
-    marginRight: 5,
-  },
-  atSymbol: {
-    fontSize: 16,
-    color: '#666',
-    marginHorizontal: 2,
-    fontWeight: 'semibold',
-  },
-  domainPicker: {
-    flex: 1,
-    height: 40,
-  },
   passwordEditContainer: {
     width: '100%',
-    marginTop: 15,
-    padding: 15,
+    marginTop: 20,
+    marginBottom: 10,
+    padding: 20,
     backgroundColor: '#f8f8f8',
     borderRadius: 8,
     borderWidth: 1,
@@ -659,17 +652,18 @@ const styles = StyleSheet.create({
   passwordEditTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
     color: '#333',
     textAlign: 'center',
   },
   passwordInput: {
     backgroundColor: '#FFF',
-    padding: 12,
+    padding: 14,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#DDD',
-    marginBottom: 10,
+    marginBottom: 12,
+    minHeight: 48,
   },
   cancelPasswordButton: {
     alignSelf: 'center',

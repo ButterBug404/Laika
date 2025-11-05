@@ -105,3 +105,18 @@ export function validateRequest(req, res, next){
 	}
 	next();
 }
+
+export const updatePasswordValidator = [
+  body('old_password')
+    .notEmpty()
+    .withMessage('La contraseña actual es requerida')
+    .isString()
+    .withMessage('La contraseña actual debe ser texto'),
+  body('new_password')
+    .notEmpty()
+    .withMessage('La nueva contraseña es requerida')
+    .isLength({ min: 8 })
+    .withMessage('La nueva contraseña debe tener al menos 8 caracteres')
+    .isString()
+    .withMessage('La nueva contraseña debe ser texto'),
+];

@@ -228,8 +228,8 @@ const getPetImageFilenames = (petId) => {
 
 export const getPetsController = async(req, res) => {
 	try {
-		const payload = req.user;
-		const petsFromDb = await retrievePets(payload.id);
+		const userId = req.params.userId || req.user.id;
+		const petsFromDb = await retrievePets(userId);
 
 		const pets = petsFromDb.map(pet => {
 			const imageFilenames = getPetImageFilenames(pet.id);
