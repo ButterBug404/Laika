@@ -424,21 +424,22 @@ const AppContent = () => {
 	}, [isLoggedIn]);
 
 
-	if (!isConnected) {
-		return (
-			<SafeAreaProvider>
-			<SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6d3c3' }}>
-			<Ionicons name="wifi-outline" size={80} color="#b04f4f" />
-			<Text style={{ fontSize: 18, fontWeight: 'bold', color: '#b04f4f', marginTop: 20, textAlign: 'center' }}>
-			Sin conexión a Internet
-			</Text>
-			<Text style={{ fontSize: 16, color: '#b04f4f', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
-			Por favor, conéctate a una red para continuar usando Laika.
-			</Text>
-			</SafeAreaView>
-			</SafeAreaProvider>
-		);
-	}
+  if (!isConnected) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f6d3c3' }}>
+          <Ionicons name="paw-outline" size={80} color="#b04f4f" />
+          <Text style={{ fontSize: 25, fontWeight: 'bold', color: '#b04f4f', marginTop: 20, textAlign: 'center' }}>
+            Sin conexión a Internet
+          </Text>
+          <Text style={{ fontSize: 16, color: '#b04f4f', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+            Por favor, conéctate a una red para continuar usando Laika.
+          </Text>
+          <Image source={require('./assets/offline.png')} style={{ width: 260, height: 260, marginTop: 30, borderRadius: 25 }} contentFit="contain" />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
 
 	if (!isLoggedIn) {
 		// Añadir este log para depuración
