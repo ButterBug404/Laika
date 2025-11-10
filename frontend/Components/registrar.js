@@ -19,7 +19,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { addMascota } from './MascotasData'; // Import the function to add new pets
 import store from '../utils/store';
@@ -896,6 +896,7 @@ const Registrar = () => {
 				<>
 				<MapView
 				style={styles.map}
+				provider={PROVIDER_GOOGLE}
 				region={ubicacion}
 				onRegionChangeComplete={(region) => setUbicacion(region)}
 				>

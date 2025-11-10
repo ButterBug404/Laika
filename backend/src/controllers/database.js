@@ -179,8 +179,24 @@ export async function updatePet(id, pet) {
     let conn;
     try {
         conn = await pool.getConnection();
-        const query = "UPDATE pets SET name = ?, species = ?, breed = ?, color = ?, age = ?, age_unit = ?, sex = ?, size = ?, vaccinated = ?, description = ?, skin_condition = ? WHERE id = ?";
-        const res = await conn.query(query, [...Object.values(pet), id]);
+        const query = "UPDATE pets SET name = ?, age = ?, age_unit = ?, breed = ?, vaccinated = ?, color = ?, size = ?, sex = ?, description = ?, skin_condition = ? WHERE id = ?";
+        
+        const vaccinated = pet.vaccinated === 'true' || pet.vaccinated === true ? 1 : 0;
+        const skin_condition = pet.skin_condition === 'true' || pet.skin_condition === true ? 1 : 0;
+
+        const res = await conn.query(query, [
+            pet.name,
+            pet.age,
+            pet.age_unit,
+            pet.breed,
+            vaccinated,
+            pet.color,
+            pet.size,
+            pet.sex,
+            pet.description,
+            skin_condition,
+            id
+        ]);
         return res;
     } catch (err) {
         console.log("Error at updatePet, ", err);
@@ -230,6 +246,27 @@ export async function updateUser(id, user) {
         if (conn) conn.release();
     }
 }
+
+export async function retrieveMissingPetsNearLocation(location, radius = 10000) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = `
+            SELECT p.*, pa.last_seen_location
+            FROM pets p
+            JOIN pet_alerts pa ON p.id = pa.pet_id
+            WHERE pa.status = 'MISSING'
+            AND ST_DISTANCE_SPHERE(pa.last_seen_location, ST_GeomFromText(?)) <= ?;
+        `;
+        const rows = await conn.query(query, [location, radius]);
+        return rows;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (conn) conn.end();
+    }
+}
+
 export async function updatePassword(id, password_hash) {
     let conn;
     try {
@@ -241,5 +278,117 @@ export async function updatePassword(id, password_hash) {
         console.log("Error at updateUser, ", err);
     } finally {
         if (conn) conn.release();
+    }
+}
+
+export async function retrievePetMatchesByUserId(userId) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = `
+            SELECT
+                pm.id AS match_id,
+                pm.confidence_level,
+                pm.created_at AS match_created_at,
+                mpa.id AS missing_pet_alert_id,
+                mpa.time AS missing_pet_alert_time,
+                ST_AsText(mpa.last_seen_location) AS missing_pet_last_seen_location,
+                mp.id AS missing_pet_id,
+                mp.name AS missing_pet_name,
+                fpa.id AS found_pet_alert_id,
+                fpa.time AS found_pet_alert_time,
+                ST_AsText(fpa.last_seen_location) AS found_pet_last_seen_location,
+                fp.id AS found_pet_id,
+                fp.name AS found_pet_name
+            FROM
+                pet_matches pm
+            JOIN
+                pet_alerts mpa ON pm.missing_pet_alert_id = mpa.id
+            JOIN
+                pets mp ON mpa.pet_id = mp.id
+            JOIN
+                pet_alerts fpa ON pm.found_pet_alert_id = fpa.id
+            JOIN
+                pets fp ON fpa.pet_id = fp.id
+            WHERE
+                mp.user_id = ?;
+        `;
+        const rows = await conn.query(query, [userId]);
+        return rows;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (conn) conn.end();
+    }
+}
+
+export async function insertPetMatch(match) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = "INSERT INTO pet_matches (missing_pet_alert_id, found_pet_alert_id, confidence_level) VALUES (?, ?, ?)";
+        const res = await conn.query(query, [...match]);
+        return res;
+    } catch (err) {
+        console.log("Error at insertPetMatch, ", err);
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+export async function getUsersByMunicipality(municipality) {
+	let conn;
+	try {
+		conn = await pool.getConnection();
+		const rows = await conn.query("SELECT id, name, email, municipality, expo_push_token FROM laika_users WHERE municipality = ?", [municipality]);
+		return rows;
+	} catch (err) {
+		throw err;
+	} finally {
+		if (conn) conn.end();
+	}
+}
+
+export async function updateUserPushToken(userId, token) {
+	let conn;
+	try {
+		conn = await pool.getConnection();
+		const query = "UPDATE laika_users SET expo_push_token = ? WHERE id = ?";
+		const res = await conn.query(query, [token, userId]);
+		return res;
+	} catch (err) {
+		console.log("Error at updateUserPushToken, ", err);
+	} finally {
+		if (conn) conn.release();
+	}
+}
+
+export async function retrieveAdoptionPets() {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = `
+            SELECT
+                p.*,
+                a.id AS adoption_id,
+                a.description AS adoption_description,
+                a.contact_info,
+                a.contact_method,
+                u.name AS owner_name,
+                u.email AS owner_email,
+                u.phone AS owner_phone
+            FROM
+                pets p
+            JOIN
+                adoptions a ON p.id = a.pet_id
+            JOIN
+                laika_users u ON a.listed_by_user_id = u.id;
+        `;
+        const rows = await conn.query(query);
+        return rows;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (conn) conn.end();
     }
 }

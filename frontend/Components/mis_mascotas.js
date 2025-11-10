@@ -15,12 +15,13 @@ import {
 	Dimensions,
 	FlatList,
 	TouchableHighlight,
-	Linking
+	Linking,
+	Switch
 } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRoute, useIsFocused } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -88,6 +89,7 @@ const MisMascotas = () => {
 	const [possibleMatches, setPossibleMatches] = useState({});
 	const [showMatchDetails, setShowMatchDetails] = useState(false);
 	const [selectedMatch, setSelectedMatch] = useState(null);
+	const [imageUpdateKey, setImageUpdateKey] = useState(Date.now());
 
 	const isFocused = useIsFocused();
 
@@ -360,7 +362,9 @@ const MisMascotas = () => {
 			size: mascota.size || '',
 			description: mascota.description || '',
 			images: mascota.images || [],
-			face_image: mascota.face_image || null,
+			face_image: null, // Initialize as null
+			vaccinated: !!mascota.vaccinated,
+			skin_condition: !!mascota.skin_condition,
 		});
 	};
 
@@ -390,19 +394,23 @@ const MisMascotas = () => {
 			return;
 		}
 
-		const petDataToSave = {
-			...editData,
-			age: `${editData.age} ${editData.age_unit}`,
-		};
+		const petDataToSave = { ...editData };
 
-		const updatedMascotas = await updateMascotaData(selectedPetDetails.id, petDataToSave);
-		setMascotas([...updatedMascotas]);
+		const result = await updateMascotaData(selectedPetDetails.id, petDataToSave);
 
-		const updatedPet = updatedMascotas.find(pet => pet.id === selectedPetDetails.id);
-		setSelectedPetDetails(updatedPet);
+		if (result && result.success) {
+			const allMascotas = await getMascotas();
+			setMascotas(allMascotas.filter(pet => pet.alert_status !== 'FOUND'));
 
-		setIsEditingInModal(false);
-		Alert.alert('Éxito', 'Datos actualizados correctamente.');
+			const updatedPet = allMascotas.find(pet => pet.id === selectedPetDetails.id);
+			setSelectedPetDetails(updatedPet);
+
+			setImageUpdateKey(Date.now());
+			setIsEditingInModal(false);
+			Alert.alert('Éxito', 'Datos actualizados correctamente.');
+		} else {
+			Alert.alert('Error', 'No se pudo actualizar la mascota.');
+		}
 	};
 
 	const handleEditChange = (field, value) => {
@@ -591,7 +599,7 @@ const MisMascotas = () => {
 					styles.verticalBox, 
 					{ borderLeftWidth: 5, borderLeftColor: getPetTypeColor(mascota) }
 				]}>
-				<AuthenticatedImage folder="pets/faces" filename={mascota.face_image} style={styles.imageVertical} />
+				<AuthenticatedImage petId={mascota.id} type="faces" cacheKey={imageUpdateKey} style={styles.imageVertical} />
 				<View style={styles.verticalTextContainer}>
 				{editingId === mascota.id ? (
 					<>
@@ -742,7 +750,7 @@ const MisMascotas = () => {
 		<ScrollView contentContainerStyle={styles.modalScrollContainer}>
 		{selectedPetDetails && (
 			<View style={styles.petDetailsContainer}>
-			<AuthenticatedImage folder="pets/faces" filename={selectedPetDetails.face_image} style={styles.petDetailsImage} />
+			<AuthenticatedImage petId={selectedPetDetails.id} type="faces" cacheKey={imageUpdateKey} style={styles.petDetailsImage} />
 
 			{isEditingInModal ? (
 				// Edit mode in modal
@@ -753,17 +761,25 @@ const MisMascotas = () => {
 				<Text style={styles.imageButtonText}>Agregar Imagen</Text>
 				</TouchableOpacity>
 				<ScrollView horizontal={true} style={styles.previewContainer}>
-				{editData.imagen && editData.imagen.map((uri, index) => (
-					<View key={index} style={styles.previewImageWrapper}>
-					<AuthenticatedImage folder="body" filename={uri} style={styles.previewImage} />
-					<TouchableOpacity
-					style={styles.deleteImageButton}
-					onPress={() => removeImageFromEdit(index)}
-					>
-					<Ionicons name="close-circle" size={24} color="red" />
-					</TouchableOpacity>
-					</View>
-				))}
+				{editData.images && editData.images.map((image, index) => {
+					const isLocal = typeof image === 'string' && image.startsWith('file://');
+					const imageNumber = isLocal ? null : parseInt(image.split('_')[1]);
+					return (
+						<View key={index} style={styles.previewImageWrapper}>
+							{isLocal ? (
+								<AuthenticatedImage uri={image} style={styles.previewImage} />
+							) : (
+								<AuthenticatedImage petId={selectedPetDetails.id} type="body" imageNumber={imageNumber} style={styles.previewImage} />
+							)}
+							<TouchableOpacity
+								style={styles.deleteImageButton}
+								onPress={() => removeImageFromEdit(index)}
+							>
+								<Ionicons name="close-circle" size={24} color="red" />
+							</TouchableOpacity>
+						</View>
+					);
+				})}
 				</ScrollView>
 
 				{/* Face Image Management */}
@@ -771,24 +787,26 @@ const MisMascotas = () => {
 				<TouchableOpacity style={styles.imageButton} onPress={pickImageCaraForEdit}>
 				<Text style={styles.imageButtonText}>Cambiar Foto del Rostro</Text>
 				</TouchableOpacity>
-				{editData.imagencara && (
+				{editData.face_image ? (
 					<View style={styles.previewImageWrapper}>
-					<AuthenticatedImage folder="pets/faces" filename={editData.face_image} style={styles.previewImage} />
-					<TouchableOpacity
-					style={styles.deleteImageButton}
-					onPress={removeImageCaraFromEdit}
-					>
-					<Ionicons name="close-circle" size={24} color="red" />
-					</TouchableOpacity>
+						<Image source={{ uri: editData.face_image }} style={styles.previewImage} />
+						<TouchableOpacity
+							style={styles.deleteImageButton}
+							onPress={removeImageCaraFromEdit}
+						>
+							<Ionicons name="close-circle" size={24} color="red" />
+						</TouchableOpacity>
 					</View>
+				) : (
+					<AuthenticatedImage petId={selectedPetDetails.id} type="faces" style={styles.previewImage} />
 				)}
 
 				{/* Nombre */}
 				<Text style={styles.modalLabel}>Nombre <Text style={styles.asterisk}>*</Text></Text>
 				<TextInput
 				style={styles.modalInput}
-				value={editData.nombre}
-				onChangeText={(text) => handleEditChange('nombre', text)}
+				value={editData.name}
+				onChangeText={(text) => handleEditChange('name', text)}
 				placeholder="Nombre"
 				/>
 
@@ -797,18 +815,19 @@ const MisMascotas = () => {
 				<View style={styles.ageContainer}>
 				<TextInput
 				style={styles.ageInput}
-				value={editData.edad}
-				onChangeText={(text) => handleEditChange('edad', text)}
+				value={String(editData.age)}
+				onChangeText={(text) => handleEditChange('age', text)}
 				placeholder="Edad"
 				keyboardType="numeric"
 				/>
 				<Picker
-				selectedValue={editData.edadUnidad}
+				selectedValue={editData.age_unit}
 				style={styles.ageUnitPicker}
-				onValueChange={(itemValue) => handleEditChange('edadUnidad', itemValue)}
+				onValueChange={(itemValue) => handleEditChange('age_unit', itemValue)}
+				dropdownIconColor="#e07978"
 				>
-				<Picker.Item label="Meses" value="meses" />
-				<Picker.Item label="Años" value="años" />
+				<Picker.Item label="Meses" value="MONTHS" style={styles.modalPickerItem} />
+				<Picker.Item label="Años" value="YEARS" style={styles.modalPickerItem} />
 				</Picker>
 				</View>
 
@@ -819,39 +838,53 @@ const MisMascotas = () => {
 				<EspecieIcon name={selectedPetDetails.species} />
 				</View>
 
-				{/* Raza */}
-				<Text style={styles.modalLabel}>Raza <Text style={styles.asterisk}>*</Text></Text>
-				<View style={styles.pickerContainer}>
-				<Picker
-				selectedValue={editData.raza}
-				style={styles.modalPicker}
-				onValueChange={(itemValue) => handleEditChange('raza', itemValue)}
-				>
-				{getRazasList(selectedPetDetails.species).map((razaOption, index) => (
-					<Picker.Item key={index} label={razaOption} value={razaOption} />
-				))}
-				</Picker>
-				</View>
-
-				{/* Sexo */}
-				<Text style={styles.modalLabel}>Sexo <Text style={styles.asterisk}>*</Text></Text>
-				<View style={styles.pickerContainer}>
-				<Picker
-				selectedValue={editData.sexo}
-				style={styles.modalPicker}
-				onValueChange={(itemValue) => handleEditChange('sexo', itemValue)}
-				>
-				<Picker.Item label="Macho" value="Macho" />
-				<Picker.Item label="Hembra" value="Hembra" />
-				</Picker>
-				</View>
-
-				{/* Color */}
-				<Text style={styles.modalLabel}>Color <Text style={styles.asterisk}>*</Text></Text>
-				<TouchableOpacity
-				style={styles.customPickerButton}
-				onPress={() => setShowColorPicker(!showColorPicker)}
-				>
+											{/* Raza */}
+								<Text style={styles.modalLabel}>Raza <Text style={styles.asterisk}>*</Text></Text>
+								<TextInput
+								style={styles.modalInput}
+								value={editData.breed}
+								onChangeText={(text) => handleEditChange('breed', text)}
+								placeholder="Raza"
+								/>
+				
+								{/* Sexo */}
+								<Text style={styles.modalLabel}>Sexo <Text style={styles.asterisk}>*</Text></Text>
+								<View style={styles.pickerContainer}>
+								<Picker
+								selectedValue={editData.sex}
+								style={styles.modalPicker}
+								onValueChange={(itemValue) => handleEditChange('sex', itemValue)}
+								dropdownIconColor="#e07978"
+								>
+								<Picker.Item label="Macho" value="MALE" style={styles.modalPickerItem} />
+								<Picker.Item label="Hembra" value="FEMALE" style={styles.modalPickerItem} />
+								</Picker>
+								</View>
+				
+								{/* Vaccinated */}
+								<View style={styles.switchContainer}>
+								<Text style={styles.modalLabel}>Vacunado</Text>
+								<Switch
+									value={editData.vaccinated}
+									onValueChange={(value) => handleEditChange('vaccinated', value)}
+								/>
+								</View>
+				
+								{/* Skin Condition */}
+								<View style={styles.switchContainer}>
+								<Text style={styles.modalLabel}>Condición de la piel</Text>
+								<Switch
+									value={editData.skin_condition}
+									onValueChange={(value) => handleEditChange('skin_condition', value)}
+								/>
+								</View>
+				
+								{/* Color */}
+								<Text style={styles.modalLabel}>Color <Text style={styles.asterisk}>*</Text></Text>
+								<TouchableOpacity
+								style={styles.customPickerButton}
+								onPress={() => setShowColorPicker(!showColorPicker)}
+								>				
 				<View style={styles.colorPreview}>
 				{editData.color && (
 					<View style={[styles.colorSquare, { backgroundColor: colores.find(c => c.value === editData.color)?.color || '#transparent' }]} />
@@ -883,13 +916,14 @@ const MisMascotas = () => {
 				<Text style={styles.modalLabel}>Tamaño <Text style={styles.asterisk}>*</Text></Text>
 				<View style={styles.pickerContainer}>
 				<Picker
-				selectedValue={editData.tamaño}
+				selectedValue={editData.size}
 				style={styles.modalPicker}
-				onValueChange={(itemValue) => handleEditChange('tamaño', itemValue)}
+				onValueChange={(itemValue) => handleEditChange('size', itemValue)}
+				dropdownIconColor="#e07978"
 				>
-				<Picker.Item label="Pequeño" value="Pequeño" />
-				<Picker.Item label="Mediano" value="Mediano" />
-				<Picker.Item label="Grande" value="Grande" />
+				<Picker.Item label="Pequeño" value="SMALL" style={styles.modalPickerItem} />
+				<Picker.Item label="Mediano" value="MEDIUM" style={styles.modalPickerItem} />
+				<Picker.Item label="Grande" value="BIG" style={styles.modalPickerItem} />
 				</Picker>
 				</View>
 
@@ -897,8 +931,8 @@ const MisMascotas = () => {
 				<Text style={styles.modalLabel}>Descripción</Text>
 				<TextInput
 				style={styles.modalInputMultiline}
-				value={editData.descripcion}
-				onChangeText={(text) => handleEditChange('descripcion', text)}
+				value={editData.description}
+				onChangeText={(text) => handleEditChange('description', text)}
 				placeholder="Descripción"
 				multiline
 				numberOfLines={3}
@@ -923,12 +957,12 @@ const MisMascotas = () => {
 					<Text style={styles.petDetailItem}><Text style={styles.boldLabel}>Descripción:</Text> {selectedPetDetails.descripcion}</Text>
 				)}
 
-				{Array.isArray(selectedPetDetails.imagen) && selectedPetDetails.imagen.length > 0 && (
+				{Array.isArray(selectedPetDetails.images) && selectedPetDetails.images.length > 0 && (
 					<View style={styles.galleryContainer}>
 					<Text style={styles.galleryTitle}>Galería de Imágenes</Text>
 					<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-					{selectedPetDetails.imagen.map((img, index) => (
-						<AuthenticatedImage key={index} folder="pets/body" filename={img} style={styles.galleryImage} />
+					{selectedPetDetails.images.map((img, index) => (
+						<AuthenticatedImage key={index} petId={selectedPetDetails.id} type="body" imageNumber={index + 1} style={styles.galleryImage} />
 					))}
 					</ScrollView>
 					</View>
@@ -958,8 +992,8 @@ const MisMascotas = () => {
 					<View style={styles.matchCard}>
 					<View style={styles.matchImageAndScore}>
 					<AuthenticatedImage 
-					sfolder="pets/faces" 
-					filename={getBestMatch(selectedPetDetails.id).pet.face_image} 
+					petId={getBestMatch(selectedPetDetails.id).pet.id}
+					type="faces"
 					style={styles.matchImage} 
 					/>
 					<View style={styles.matchScoreContainer}>
@@ -1099,7 +1133,8 @@ const MisMascotas = () => {
 		{selectedMatch && (
 			<View style={styles.matchDetailsContainer}>
 			<AuthenticatedImage 
-			source={{ uri: selectedMatch.face_image }} 
+			petId={selectedMatch.id}
+			type="faces"
 			style={styles.matchDetailImage} 
 			/>
 
@@ -1271,6 +1306,7 @@ const MisMascotas = () => {
 				<>
 				<MapView
 				style={styles.map}
+				provider={PROVIDER_GOOGLE}
 				region={ubicacionPerdida}
 				onRegionChangeComplete={(region) => setUbicacionPerdida(region)}
 				>
@@ -1684,6 +1720,11 @@ const styles = StyleSheet.create({
 	modalPicker: {
 		backgroundColor: '#fff',
 		fontWeight: 'bold',
+		height: 60, // Set a fixed height
+		elevation: 10, // Increase elevation
+	},
+	modalPickerItem: {
+		color: '#000', // Explicitly set text color
 	},
 	ageContainer: {
 		flexDirection: 'row',
@@ -1707,6 +1748,17 @@ const styles = StyleSheet.create({
 		borderColor: '#ddd',
 		borderRadius: 5,
 		fontWeight: 'bold',
+	},
+	switchContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		backgroundColor: '#fff',
+		padding: 12,
+		borderRadius: 5,
+		borderWidth: 1,
+		borderColor: '#ddd',
+		marginBottom: 15,
 	},
 	customPickerButton: {
 		backgroundColor: '#fff',

@@ -10,7 +10,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Animated, 
+  Animated,
+  PermissionsAndroid,
+  Linking
 } from 'react-native';
 import { Image } from 'expo-image';
 import { NavigationContainer } from '@react-navigation/native';
@@ -22,6 +24,13 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import NetInfo from '@react-native-community/netinfo';
 
+import { 
+	startSocket, 
+	stopSocket, 
+	getSocket, 
+	sendMessage 
+} from './utils/BackgroundSocketService.js';
+
 // Archivos de componentes
 import Inicio from './Components/Home';
 import Registrar from './Components/registrar.js';
@@ -29,6 +38,8 @@ import Mascotas from './Components/mis_mascotas.js';
 import Adoptar from './Components/adoptar.js';
 import Cuenta from './Components/cuenta.js';
 import UserContext, { useUser } from './Components/UserContext';
+import MissingPetAlertModal from './Components/MissingPetAlertModal.js';
+import { registerForPushNotificationsAsync } from './utils/pushNotifications.js';
 
 // Estilos
 import styles from './Components/Estilos/Estilos.js';
@@ -43,7 +54,7 @@ import Registro from './Components/SignUp.js'; // REGISTRAR CUENTA
 import store from './utils/store';
 
 //Env variables
-const apiUrl = process.env.API_URL;
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 console.log(apiUrl);
 
@@ -397,10 +408,20 @@ const LoginScreen = () => {
 	);
 };
 
+
+// ... (imports remain the same)
+
+// ... (HomeStack, HomeScreen, etc. remain the same)
+
+// ... (LoginScreen remains the same)
+
 const AppContent = () => {
-	const { isLoggedIn } = useUser();
+	const { isLoggedIn, user } = useUser();
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 	const [isConnected, setIsConnected] = useState(true);
+	const [isAlertModalVisible, setIsAlertModalVisible] = useState(false);
+	const [alertData, setAlertData] = useState(null);
+
 
 	useEffect(() => {
 		const unsubscribe = NetInfo.addEventListener(state => {
@@ -422,6 +443,45 @@ const AppContent = () => {
 			}).start();
 		}
 	}, [isLoggedIn]);
+
+	useEffect(() => {
+		const setupNotificationsAndSockets = async () => {
+			if (isLoggedIn && user) {
+				// Register for push notifications
+				const token = await store.getValueFor('jwt');
+				registerForPushNotificationsAsync(user.id, token);
+
+				// Setup sockets
+				const SOCKET_URL = apiUrl.replace(/^https/, 'wss');
+				startSocket(SOCKET_URL);
+
+				const socket = getSocket();
+				if (socket) {
+					socket.on('connect', () => {
+						if (user && user.id) {
+							sendMessage('registerUser', { userId: user.id });
+						}
+						if (user && user.municipality) {
+							sendMessage('joinMunicipality', user.municipality);
+						}
+					});
+
+					socket.on('newMissingAlert', (data) => {
+						setAlertData(data);
+						setIsAlertModalVisible(true);
+					});
+				}
+			}
+		};
+
+		setupNotificationsAndSockets();
+
+		return () => {
+			if (isLoggedIn) {
+				stopSocket();
+			}
+		};
+	}, [isLoggedIn, user]);
 
 
   if (!isConnected) {
@@ -449,53 +509,60 @@ const AppContent = () => {
 
 
 	return (
-		<Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-		<NavigationContainer>
-		<Tab.Navigator
-		screenOptions={({ route }) => ({
-			tabBarIcon: ({ focused, color, size }) => {
-				let iconName;
-				switch (route.name) {
-					case 'Inicio':
-						iconName = focused ? 'home-sharp' : 'home-outline';
-						break;
-					case 'Mascotas':
-						iconName = focused ? 'paw-sharp' : 'paw-outline';
-						break;
-					case 'Registrar':
-						iconName = focused ? 'add-circle-sharp' : 'add-circle-sharp';
-						break;
-					case 'Adopción':
-						iconName = focused ? 'heart-sharp' : 'heart-outline';
-						break;
-					case 'Configurar':
-						iconName = focused ? 'settings-sharp' : 'settings-outline';
-						break;
-					default:
-						iconName = focused
-							? 'help-circle-sharp'
-							: 'help-circle-outline';
-						break;
-				}
-				return <Ionicons name={iconName} size={size} color={color} />;
-			},
+		<View style={{ flex: 1 }}>
+			<Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+				<NavigationContainer>
+					<Tab.Navigator
+						screenOptions={({ route }) => ({
+							tabBarIcon: ({ focused, color, size }) => {
+								let iconName;
+								switch (route.name) {
+									case 'Inicio':
+										iconName = focused ? 'home-sharp' : 'home-outline';
+										break;
+									case 'Mascotas':
+										iconName = focused ? 'paw-sharp' : 'paw-outline';
+										break;
+									case 'Registrar':
+										iconName = focused ? 'add-circle-sharp' : 'add-circle-sharp';
+										break;
+									case 'Adopción':
+										iconName = focused ? 'heart-sharp' : 'heart-outline';
+										break;
+									case 'Configurar':
+										iconName = focused ? 'settings-sharp' : 'settings-outline';
+										break;
+									default:
+										iconName = focused
+											? 'help-circle-sharp'
+											: 'help-circle-outline';
+										break;
+								}
+								return <Ionicons name={iconName} size={size} color={color} />;
+							},
 
-			tabBarActiveTintColor: '#000',
-			tabBarInactiveTintColor: '#777',
-			headerTitle: 'Laika - Busca a tu mascota', // Cambia el título del header a "Laika"
-			headerTitleAlign: 'center', // Centra el título
-			headerStyle: { backgroundColor: '#E07978' },
-			headerTintColor: '#ffffffff',
-		})}>
+							tabBarActiveTintColor: '#000',
+							tabBarInactiveTintColor: '#777',
+							headerTitle: 'Laika - Busca a tu mascota', // Cambia el título del header a "Laika"
+							headerTitleAlign: 'center', // Centra el título
+							headerStyle: { backgroundColor: '#E07978' },
+							headerTintColor: '#ffffffff',
+						})}>
 
-		<Tab.Screen name="Inicio" component={HomeStack} />
-		<Tab.Screen name="Mascotas" component={MascotasScreen} />
-		<Tab.Screen name="Registrar" component={RegistrarScreen} />
-		<Tab.Screen name="Adopción" component={AdoptaScreen} />
-		<Tab.Screen name="Configurar" component={PerfilScreen} />
-		</Tab.Navigator>
-		</NavigationContainer>
-		</Animated.View>
+						<Tab.Screen name="Inicio" component={HomeStack} />
+						<Tab.Screen name="Mascotas" component={MascotasScreen} />
+						<Tab.Screen name="Registrar" component={RegistrarScreen} />
+						<Tab.Screen name="Adopción" component={AdoptaScreen} />
+						<Tab.Screen name="Configurar" component={PerfilScreen} />
+					</Tab.Navigator>
+				</NavigationContainer>
+			</Animated.View>
+			<MissingPetAlertModal
+				visible={isAlertModalVisible}
+				alertData={alertData}
+				onClose={() => setIsAlertModalVisible(false)}
+			/>
+		</View>
 	);
 };
 

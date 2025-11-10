@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de Especie y Raza Animal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-section {
+            margin: 20px 0;
+            width: 100%;
+        }
+        #imagePreview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .confidence {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .loading {
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clasificador de Especie y Raza Animal</h1>
+    <p>Sube de 1 a 4 imágenes. El modelo primero predecirá la especie del animal y después la raza o patrón de esa especie.</p>
+    
+    <div class="container">
+        <div class="input-section">
+            <input type="file" id="imageUpload" accept="image/*" multiple>
+            <div id="loading" class="loading" style="display:none;">Cargando modelos...</div>
+        </div>
+        
+        <div id="imagePreviewContainer" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+        
+        <button id="predictBtn" disabled>Predecir</button>
+        
+        <div class="result" id="result"></div>
+        <div class="confidence" id="confidence"></div>
+    </div>
+
+    <script>
+        // Model URLs
+        const MODEL_PATHS = {
+            'gato': './gato/model.json',
+            'perro': './perro/model.json',
+            'conejo': './conejo/model.json',
+            'ave': './ave/model.json',
+            'especie': './model.json'
+        };
+
+        // Class names for each model
+        const SPECIES_NAMES = ['ave', 'conejo', 'gato', 'perro'];
+        const BREED_NAMES = {
+            'gato': ['black', 'calico', 'gris', 'naranja', 'points', 'tabby', 'tortoiseshell', 'tuxedo', 'white'].sort(),
+            'perro': ['chihuahua', 'golden', 'labrador', 'mestizo', 'pomerania', 'poodle', 'pug', 'salchicha'].sort(),
+            'conejo': ['orejas_caidas', 'orejas_paradas', 'peludo'].sort(),
+            'ave': ['canario', 'loro', 'ninfa', 'pato', 'perico_australiano', 'pollo'].sort()
+        };
+
+        let speciesModel = null;
+        let breedModels = {};
+        let loadedSpeciesModel = false;
+        let loadedBreedModels = {};
+
+        const imageUpload = document.getElementById('imageUpload');
+        const predictBtn = document.getElementById('predictBtn');
+        const resultDiv = document.getElementById('result');
+        const confidenceDiv = document.getElementById('confidence');
+        const loadingDiv = document.getElementById('loading');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+        // Load all models
+        async function loadAllModels() {
+            loadingDiv.style.display = 'block';
+            try {
+                // Load species model
+                speciesModel = await tf.loadGraphModel(MODEL_PATHS['especie']);
+                loadedSpeciesModel = true;
+                // Load breed models for each species
+                for (const specie of SPECIES_NAMES) {
+                    breedModels[specie] = await tf.loadGraphModel(MODEL_PATHS[specie]);
+                    loadedBreedModels[specie] = true;
+                }
+                predictBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+            } catch (error) {
+                console.error('Error loading models:', error);
+                loadingDiv.textContent = 'Error loading models. Check console for details.';
+            }
+        }
+
+        // Handle image upload (multiple images, max 4)
+        imageUpload.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files).slice(0, 4);
+            imagePreviewContainer.innerHTML = '';
+            resultDiv.textContent = '';
+            confidenceDiv.textContent = '';
+            files.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '120px';
+                    img.style.maxHeight = '120px';
+                    img.style.border = '1px solid #ddd';
+                    img.style.borderRadius = '4px';
+                    img.style.display = 'block';
+                    img.setAttribute('data-idx', idx);
+                    imagePreviewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Predict button click handler (for all images)
+        predictBtn.addEventListener('click', async function() {
+            if (!loadedSpeciesModel || Object.keys(loadedBreedModels).length !== SPECIES_NAMES.length) {
+                alert('Los modelos aún no se han cargado. Por favor espera.');
+                return;
+            }
+            const imgs = Array.from(imagePreviewContainer.getElementsByTagName('img'));
+            if (imgs.length === 0) {
+                alert('Por favor sube al menos una imagen.');
+                return;
+            }
+            resultDiv.textContent = 'Procesando...';
+            confidenceDiv.textContent = '';
+            try {
+                // 1. Predict species for each image
+                let speciesScoresSum = Array(SPECIES_NAMES.length).fill(0);
+                let speciesPredictions = [];
+                for (let img of imgs) {
+                    const imageTensor = await preprocessImage(img);
+                    const prediction = await speciesModel.predict(imageTensor);
+                    const scores = await prediction.data();
+                    for (let i = 0; i < scores.length; i++) {
+                        speciesScoresSum[i] += scores[i];
+                    }
+                    speciesPredictions.push(scores);
+                    prediction.dispose();
+                    imageTensor.dispose();
+                }
+                // 2. Average the probabilities
+                const avgSpeciesScores = speciesScoresSum.map(s => s / imgs.length);
+                const maxSpeciesScore = Math.max(...avgSpeciesScores);
+                const predictedSpeciesIdx = avgSpeciesScores.indexOf(maxSpeciesScore);
+                const predictedSpecies = SPECIES_NAMES[predictedSpeciesIdx];
+
+                // 3. Show species prediction
+                resultDiv.innerHTML = `<div>Especie predicha: <b>${predictedSpecies}</b></div>`;
+                confidenceDiv.innerHTML = `<div>Confianza de especie: ${(maxSpeciesScore * 100).toFixed(2)}%</div>`;
+
+                // 4. Predict breed/pattern for that species only
+                let breedResults = [];
+                let breedConfidences = [];
+                let breedCount = {};
+                let breedSum = {};
+                const breedList = BREED_NAMES[predictedSpecies];
+                for (let i = 0; i < breedList.length; i++) {
+                    breedCount[i] = 0;
+                    breedSum[i] = 0;
+                }
+                for (let img of imgs) {
+                    const imageTensor = await preprocessImage(img);
+                    const breedModel = breedModels[predictedSpecies];
+                    const prediction = await breedModel.predict(imageTensor);
+                    const scores = await prediction.data();
+                    const maxScore = Math.max(...scores);
+                    const predictedClass = scores.indexOf(maxScore);
+                    breedResults.push({
+                        name: breedList[predictedClass],
+                        prob: maxScore,
+                        idx: predictedClass
+                    });
+                    breedConfidences.push(maxScore);
+                    breedCount[predictedClass]++;
+                    breedSum[predictedClass] += maxScore;
+                    prediction.dispose();
+                    imageTensor.dispose();
+                }
+                // 5. Find the breed with the most votes (and highest sum if tie)
+                let maxVotes = Math.max(...Object.values(breedCount));
+                let candidates = Object.keys(breedCount).filter(idx => breedCount[idx] === maxVotes);
+                let definitiveIdx = candidates[0];
+                if (candidates.length > 1) {
+                    // Tie: pick the one with highest sum of probabilities
+                    let maxSum = -1;
+                    for (let idx of candidates) {
+                        if (breedSum[idx] > maxSum) {
+                            maxSum = breedSum[idx];
+                            definitiveIdx = idx;
+                        }
+                    }
+                }
+                const definitiveBreed = breedList[definitiveIdx];
+                const definitiveSum = breedSum[definitiveIdx];
+                const definitiveAvg = breedCount[definitiveIdx] > 0 ? (definitiveSum / breedCount[definitiveIdx]) : 0;
+
+                // 6. Show breed predictions with probability
+                resultDiv.innerHTML += breedResults.map((r, i) =>
+                    `<div>Predicción [${i+1}]: ${r.name} <span style="color:#888;">(${(r.prob*100).toFixed(2)}%)</span></div>`
+                ).join('');
+                // 7. Show definitive prediction and stats
+                resultDiv.innerHTML += `<div style="margin-top:10px;font-size:16px;">
+                    <b>Predicción definitiva de raza:</b> ${definitiveBreed}<br>
+                    Suma de probabilidades: ${(definitiveSum*100).toFixed(2)}%<br>
+                    Promedio: ${(definitiveAvg*100).toFixed(2)}%
+                </div>`;
+                confidenceDiv.innerHTML += `<div>Confianza de raza (promedio): ${(definitiveAvg * 100).toFixed(2)}%</div>`;
+            } catch (error) {
+                console.error('Error during prediction:', error);
+                resultDiv.textContent = 'Error al hacer la predicción. Consulta la consola para más detalles.';
+                confidenceDiv.textContent = '';
+            }
+        });
+
+        // Preprocess the image to match the model's input requirements
+        async function preprocessImage(imgElement) {
+            return tf.tidy(() => {
+                let img = tf.browser.fromPixels(imgElement);
+                img = tf.image.resizeBilinear(img, [224, 224]);
+                img = img.div(255.0);
+                img = img.expandDims(0);
+                return img;
+            });
+        }
+
+        // Load all models when page loads
+        window.onload = loadAllModels;
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+module.exports = {
+  expo: {
+    name: "Laika",
+    slug: "laika-proyecto-modular",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/PerroIcon.png",
+    userInterfaceStyle: "light",
+    backgroundColor: "#ffffff",
+    splash: {
+      image: "./assets/inicio.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    android: {
+      package: "com.laika.proyectomodular",
+      googleServicesFile: "./google-services.json",
+      adaptiveIcon: {
+        foregroundImage: "./assets/PerroIcon.png",
+        backgroundColor: "#FFFFFF"
+      }
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.laika.proyectomodular",
+      icon: "./assets/PerroIcon.png"
+    },
+    web: {
+      favicon: "./assets/favicon.png"
+    },
+    extra: {
+      API_URL: "https://monitor-loyal-openly.ngrok-free.app",
+      eas: {
+        projectId: "cbe240c4-1463-42d7-bfc6-56a0f4d02f77"
+      }
+    },
+    plugins: [
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+    ]
+  }
+};

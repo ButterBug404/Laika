@@ -53,7 +53,6 @@ export const UserProvider = ({ children }) => {
 	  };
 	const updateUserProfile = (updates) => {
 		if (currentUser) {
-			// This only updates the local token data, backend update would need another API call
 			setCurrentUser(prev => ({ ...prev, ...updates }));
 		}
 	};
@@ -65,7 +64,6 @@ export const UserProvider = ({ children }) => {
 		return '';
 	};
 
-	// Create a UI-ready user profile object with mapped names and the profile image
 	const userProfile = currentUser ? {
 		id: currentUser.id,
 		nombre: currentUser.name,
@@ -76,7 +74,7 @@ export const UserProvider = ({ children }) => {
 	} : null;
 
 	return (
-		<UserContext.Provider value={{ userProfile, isLoggedIn, setIsLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName, fetchUser }}>
+		<UserContext.Provider value={{ user: currentUser, userProfile, isLoggedIn, setIsLoggedIn, loginUser, logoutUser, updateUserProfile, getFullName, fetchUser }}>
 		{children}
 		</UserContext.Provider>
 	);

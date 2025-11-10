@@ -1,4 +1,4 @@
-import { retrieveUserById, updateUser, updatePassword, retrievePasswordById } from "./database.js";
+import { retrieveUserById, updateUser, updatePassword, retrievePasswordById, updateUserPushToken } from "./database.js";
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -121,7 +121,6 @@ export const updateProfilePicture = async (req, res) => {
 		const profilePictureDir = path.join(__dirname, '../../pictures/profile');
 		const potentialExtensions = ['.jpeg', '.jpg', '.png', '.webp'];
 
-		// Delete old profile picture
 		for (const ext of potentialExtensions) {
 			const potentialPath = path.join(profilePictureDir, `${userId}${ext}`);
 			if (fs.existsSync(potentialPath)) {
@@ -130,7 +129,6 @@ export const updateProfilePicture = async (req, res) => {
 			}
 		}
 
-		// Save new profile picture
 		const { path: tempPath, originalname } = req.file;
 		const extension = path.extname(originalname);
 		const newPath = path.join(profilePictureDir, `${userId}${extension}`);
@@ -140,5 +138,27 @@ export const updateProfilePicture = async (req, res) => {
 	} catch (err) {
 		console.error("updateProfilePicture error", err.message);
 		return res.status(500).json({ error: err.message });
+	}
+};
+
+export const updateUserPushTokenController = async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const { expoPushToken } = req.body;
+
+		if (req.user.id !== parseInt(userId, 10)) {
+			return res.status(403).json({ failure: "Forbidden: You can only update your own push token." });
+		}
+
+		if (!expoPushToken) {
+			return res.status(400).json({ failure: "Push token is required." });
+		}
+
+		await updateUserPushToken(userId, expoPushToken);
+
+		res.status(200).json({ success: "Push token updated successfully." });
+	} catch (err) {
+		console.error("updateUserPushTokenController error:", err.message);
+		return res.status(500).json({ error: "Failed to update push token." });
 	}
 };

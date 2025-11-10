@@ -5,15 +5,36 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "API"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "API"
       }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "API"
+      }
+    },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "environment": "development",
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "API"
+      }
+    }
   },
   "submit": {
     "production": {}

@@ -21,6 +21,7 @@ CREATE TABLE `laika_users` (
 	`phone` VARCHAR(20) NOT NULL,
 	`state` VARCHAR(100) NOT NULL,
 	`municipality` VARCHAR(100) NOT NULL,
+	`expo_push_token` VARCHAR(255) NULL,
 	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -143,5 +144,15 @@ INSERT INTO `pet_alerts` (`user_id`, `pet_id`, `status`, `time`, `last_seen_loca
 
 
 
+
+CREATE TABLE `pet_matches` (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`missing_pet_alert_id` INT NOT NULL,
+	`found_pet_alert_id` INT NOT NULL,
+	`confidence_level` FLOAT NOT NULL,
+	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (`missing_pet_alert_id`) REFERENCES `pet_alerts`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`found_pet_alert_id`) REFERENCES `pet_alerts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 COMMIT;

@@ -55,9 +55,34 @@ export const registerAlert = async (alertData) => {
 export const updateMascotaData = async (id, newData) => {
   try {
     const token = await store.getValueFor('jwt');
-    const response = await axios.put(`${API_URL}/api/update_pet/${id}`, newData, {
+    const formData = new FormData();
+
+    for (const key in newData) {
+      if (key === 'face_image' && newData[key] && newData[key].startsWith('file:')) {
+        formData.append('faceImage', {
+          uri: newData[key],
+          type: 'image/jpeg',
+          name: 'face_image.jpg',
+        });
+      } else if (key === 'images' && Array.isArray(newData[key])) {
+        newData[key].forEach((image, index) => {
+          if (image.startsWith('file:')) {
+            formData.append('images', {
+              uri: image,
+              type: 'image/jpeg',
+              name: `pet_image_${index}.jpg`,
+            });
+          }
+        });
+      } else {
+        formData.append(key, newData[key]);
+      }
+    }
+
+    const response = await axios.put(`${API_URL}/api/update_pet/${id}`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
@@ -110,4 +135,19 @@ export const deletePetAlert = async (id) => {
     console.error(`Error deleting pet alert with id ${id}:`, error);
     return null;
   }
+};
+
+export const getAdoptionPets = async () => {
+	try {
+		const token = await store.getValueFor('jwt');
+		const response = await axios.get(`${API_URL}/api/adoption`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error('Error fetching adoption pets:', error);
+		return [];
+	}
 };

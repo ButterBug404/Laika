@@ -16,7 +16,10 @@ import {
 	deletePetController,
 	deletePetAlertController,
 	getPetFacePictureController,
-	getPetBodyPictureController
+	getPetBodyPictureController,
+	getPetMatchesController,
+	testAlertController,
+	getAdoptionPetsController
 } from '../controllers/pets.controller.js';
 import { 
 	validateRequest, 
@@ -128,3 +131,8 @@ petsRouter.delete('/delete_pet_alert/:id', authRequired, deletePetAlertControlle
 petsRouter.get('/pet-pictures/:pet_id/faces', authRequired, getPetFacePictureController);
 
 petsRouter.get('/pet-pictures/:pet_id/body/:image_number', authRequired, getPetBodyPictureController);
+petsRouter.get('/matches', authRequired, getPetMatchesController);
+
+petsRouter.get('/test-alert/:municipality', testAlertController);
+
+petsRouter.get('/adoption', authRequired, getAdoptionPetsController);

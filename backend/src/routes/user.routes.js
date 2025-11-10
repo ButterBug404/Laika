@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserById, getProfilePictureController, updateProfilePicture, updateUserProfile, updatePasswordController } from '../controllers/user.controller.js';
+import { getUserById, getProfilePictureController, updateProfilePicture, updateUserProfile, updatePasswordController, updateUserPushTokenController } from '../controllers/user.controller.js';
 import { authRequired } from '../utils/jwt.js';
 import { updatePasswordValidator, validateRequest } from '../utils/validators.js';
 import multer from 'multer';
@@ -16,5 +16,6 @@ userRouter.put('/update-password',
     updatePasswordController
 );
 userRouter.put('/update-profile-picture', authRequired, upload.single('profilePicture'), updateProfilePicture);
+userRouter.post('/push-token/:userId', authRequired, updateUserPushTokenController);
 userRouter.get('/users/:id', authRequired, getUserById);
 userRouter.get('/profile-pictures/:user_id', authRequired, getProfilePictureController);

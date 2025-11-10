@@ -2,24 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, Modal, Pressable, Button, ScrollView, Linking, Alert, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
-import { getMascotas } from './MascotasData';
+import { getAdoptionPets } from './MascotasData';
+import AuthenticatedImage from './AuthenticatedImage';
 
-// Replace the function to directly return required local images
-const getImageForAnimal = (especie) => {
-  switch(especie) {
-    case 'perro':
-      return require('../assets/PerroIcon.png');
-    case 'gato':
-      return require('../assets/GatoIcon.png');
-    case 'conejo':
-      return require('../assets/ConejoIcon.png');
-    case 'ave':
-      return require('../assets/AveIcon.png');
-    default:
-      return { uri: 'https://cdn.dribbble.com/userupload/6113043/file/original-b2a7a299d9bba74d1d4ea1fed5457051.png?resize=1200x900&vertical=center' };
-  }
-};
-
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const Adopta = () => {
   const route = useRoute();
   const [modalVisible, setModalVisible] = useState(false);
@@ -27,36 +13,37 @@ const Adopta = () => {
   const [selectedMascota, setSelectedMascota] = useState(null);
   const [especieSeleccionada, setEspecieSeleccionada] = useState('todas');
   const [mascotasData, setMascotasData] = useState([]);
-  const [contactosData, setContactosData] = useState({ empresas: [], personales: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Fetch data from GitHub JSON and combine with local pets
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        const adoptionPets = await getAdoptionPets();
         
-        // Get user's local pets for adoption - FILTER OUT ADOPTED PETS
-        const userPets = await getMascotas();
-        const availablePets = userPets.filter(pet => 
-          pet.tipoRegistro === 'adopcion' && pet.estado !== 'Adoptada'
-        );
-        
-        // Process user pets to match structure and mark them as user's own
-        const processedUserPets = availablePets.map(pet => ({
-          ...pet,
+        const processedPets = adoptionPets.map(pet => ({
+          id: pet.id,
+          nombre: pet.name,
+          especie: pet.species.toLowerCase(),
+          raza: pet.breed,
+          edad: `${pet.age} ${pet.age_unit.toLowerCase()}`,
+          color: pet.color,
+          tamaño: pet.size,
+          vacunado: pet.vaccinated,
+          descripcion: pet.description,
+          face_image: pet.face_image,
+          images: pet.images,
           contacto: {
-            tipo: 'personal',
-            nombre: 'Mi contacto',
-            telefono: pet.contacto || 'Contactar através del perfil',
-            // Add default email if needed
+            tipo: 'personal', // Assuming all adoption pets are listed by individuals for now
+            nombre: pet.owner_name,
+            telefono: pet.contact_info || pet.owner_phone,
+            email: pet.owner_email,
           },
-          isUserPet: true // Mark as user's own pet
+          isUserPet: false // All pets fetched here are for adoption, not the current user's
         }));
         
-        // Set the processed pets
-        setMascotasData(processedUserPets);
+        setMascotasData(processedPets);
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -185,30 +172,26 @@ const Adopta = () => {
           selectedValue={especieSeleccionada}
           style={styles.picker}
           onValueChange={(itemValue) => setEspecieSeleccionada(itemValue)}
+          dropdownIconColor="#e07978"
         >
-          <Picker.Item label="Todas las especies" value="todas" />
-          <Picker.Item label="Perros" value="perro" />
-          <Picker.Item label="Gatos" value="gato" />
-          <Picker.Item label="Conejos" value="conejo" />
-          <Picker.Item label="Aves" value="ave" />
+          <Picker.Item label="Todas las especies" value="todas" style={styles.pickerItem} />
+          <Picker.Item label="Perros" value="dog" style={styles.pickerItem} />
+          <Picker.Item label="Gatos" value="cat" style={styles.pickerItem} />
+          <Picker.Item label="Conejos" value="bunny" style={styles.pickerItem} />
+          <Picker.Item label="Aves" value="bird" style={styles.pickerItem} />
         </Picker>
       </View>
 
       <FlatList
         data={mascotasFiltradas}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         renderItem={({ item }) => (
           <Pressable style={styles.card} onPress={() => openModal(item)}>
-            <Image source={item.imagen} style={styles.imagen} />
+            <AuthenticatedImage petId={item.id} type="faces" style={styles.imagen} />
             <Text style={styles.nombre}>{item.nombre}</Text>
             <Text style={styles.detalle}>Edad: {item.edad}</Text>
             <Text style={styles.detalle}>Especie: {item.especie.charAt(0).toUpperCase() + item.especie.slice(1)}</Text>
-            {item.isUserPet && (
-              <View style={styles.userPetBadge}>
-                <Text style={styles.userPetText}>Tu mascota</Text>
-              </View>
-            )}
           </Pressable>
         )}
       />
@@ -224,7 +207,7 @@ const Adopta = () => {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <Image source={selectedMascota.imagen} style={styles.modalImage} />
+                <AuthenticatedImage petId={selectedMascota.id} type="faces" style={styles.modalImage} />
                 <Text style={styles.modalTitle}>{selectedMascota.nombre}</Text>
                 <Text style={styles.modalDetail}>Especie: {selectedMascota.especie.charAt(0).toUpperCase() + selectedMascota.especie.slice(1)}</Text>
                 <Text style={styles.modalDetail}>Edad: {selectedMascota.edad}</Text>
@@ -234,19 +217,12 @@ const Adopta = () => {
                 <Text style={styles.modalDetail}>Vacunado: {selectedMascota.vacunado ? 'Sí' : 'No'}</Text>
                 <Text style={styles.modalDetail}>Descripción: {selectedMascota.descripcion}</Text>
                 
-                {selectedMascota.isUserPet ? (
-                  <View style={styles.ownPetNotice}>
-                    <Text style={styles.ownPetNoticeText}>Esta es tu mascota en adopción</Text>
-                    <Text style={styles.ownPetNoticeSubtext}>No puedes adoptar tu propia mascota</Text>
-                  </View>
-                ) : (
-                  <Button 
-                    title="Contactar para adoptar" 
-                    onPress={abrirModalContactos}
-                    color="#e07978"
-                    style={styles.closeButton}
-                  />
-                )}
+                <Button 
+                  title="Contactar para adoptar" 
+                  onPress={abrirModalContactos}
+                  color="#e07978"
+                  style={styles.closeButton}
+                />
                 
                 <Pressable style={styles.closeButton} onPress={closeModal}>
                   <Text style={styles.closeButtonText}>Cerrar</Text>
@@ -284,21 +260,23 @@ const Adopta = () => {
                 
                 <View style={styles.contactoDetailsContainer}>
                   {/* Teléfono con opción de WhatsApp */}
-                  <Pressable 
-                    style={styles.contactoMethod} 
-                    onPress={() => enviarWhatsApp(selectedMascota.contacto.telefono, selectedMascota)}
-                  >
-                    <Text style={styles.contactoMethodIcon}>📱</Text>
-                    <View style={styles.contactoMethodDetail}>
-                      <Text style={styles.contactoMethodLabel}>WhatsApp</Text>
-                      <Text style={styles.contactoMethodValue}>
-                        {selectedMascota.contacto.telefono.replace("52", "+52 ")}
-                      </Text>
-                    </View>
-                  </Pressable>
+                  {selectedMascota.contacto.telefono && (
+                    <Pressable 
+                      style={styles.contactoMethod} 
+                      onPress={() => enviarWhatsApp(selectedMascota.contacto.telefono, selectedMascota)}
+                    >
+                      <Text style={styles.contactoMethodIcon}>📱</Text>
+                      <View style={styles.contactoMethodDetail}>
+                        <Text style={styles.contactoMethodLabel}>WhatsApp</Text>
+                        <Text style={styles.contactoMethodValue}>
+                          {selectedMascota.contacto.telefono.replace("52", "+52 ")}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
                   
-                  {/* Email solo para contactos de tipo asociación */}
-                  {selectedMascota.contacto.tipo === 'asociación' && (
+                  {/* Email */}
+                  {selectedMascota.contacto.email && (
                     <Pressable 
                       style={styles.contactoMethod} 
                       onPress={() => enviarEmail(selectedMascota.contacto.email, selectedMascota)}
@@ -381,12 +359,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     marginBottom: 15,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
-    elevation: 1,
+    elevation: 10, // Increase elevation to render on top of other elements
+    height: 60, // Increase height
+  },
+  pickerItem: {
+    color: '#000', // Explicitly set text color
   },
   card: {
     flex: 1,
@@ -531,42 +512,6 @@ const styles = StyleSheet.create({
   contactoMethodValue: {
     fontSize: 14,
     color: '#333',
-  },
-  userPetBadge: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  userPetText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  ownPetNotice: {
-    backgroundColor: '#f8d7da',
-    borderColor: '#f5c6cb',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  ownPetNoticeText: {
-    color: '#721c24',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  ownPetNoticeSubtext: {
-    color: '#721c24',
-    fontSize: 14,
-    marginTop: 5,
-    textAlign: 'center',
   },
 });
 

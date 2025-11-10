@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import{
+import { getIO, getConnectedUserIds, getConnectedUsers } from '../sockets.js';
+import {
 	userExists,
 	insertPet,
 	insertPetAlert,
@@ -11,11 +12,71 @@ import{
 	retrievePet,
 	updatePet,
 	deletePet,
-	deletePetAlert
+	deletePetAlert,
+	retrieveMissingPetsNearLocation,
+	insertPetMatch,
+	retrieveUserById,
+	getUsersByMunicipality,
+	retrieveAdoptionPets
 } from "./database.js";
 import {
 	verifyToken
 } from "../utils/jwt.js";
+import { compareImages, loadRecognitionModel } from '../utils/imageRecognitionService.js';
+import axios from 'axios';
+
+loadRecognitionModel();
+
+async function comparePetImagesById(foundPetId, missingPetId) {
+    const foundPetImage = getPetImageFilenames(foundPetId).face_image;
+    const missingPetImage = getPetImageFilenames(missingPetId).face_image;
+
+    if (!foundPetImage || !missingPetImage) {
+        console.warn(`Missing image for pet ${foundPetId} or ${missingPetId}. Skipping comparison.`);
+        return 0;
+    }
+
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const petsPicturesPath = path.join(__dirname, '..', '..', 'pictures', 'pets');
+    const foundPetImagePath = path.join(petsPicturesPath, 'faces', foundPetImage);
+    const missingPetImagePath = path.join(petsPicturesPath, 'faces', missingPetImage);
+
+    return await compareImages(foundPetImagePath, missingPetImagePath);
+}
+
+async function findMatchesAndNotify(foundPetAlertId, foundPetLocation, threshold = 0.8) {
+    const missingPets = await retrieveMissingPetsNearLocation(foundPetLocation);
+
+    for (const missingPet of missingPets) {
+        const confidence = await comparePetImagesById(foundPetAlertId, missingPet.pet_id);
+        if (confidence > threshold) {
+            await insertPetMatch([missingPet.alert_id, foundPetAlertId, confidence]);
+        }
+    }
+}
+
+async function sendPushNotifications(pushTokens, title, body, data) {
+	const messages = pushTokens.map(token => ({
+		to: token,
+		sound: 'default',
+		title: title,
+		body: body,
+		data: data,
+	}));
+
+	try {
+		await axios.post('https://exp.host/--/api/v2/push/send', messages, {
+			headers: {
+				'Accept': 'application/json',
+				'Accept-encoding': 'gzip, deflate',
+				'Content-Type': 'application/json',
+			},
+		});
+		console.log('Push notifications sent successfully.');
+	} catch (error) {
+		console.error('Error sending push notifications:', error.response?.data || error.message);
+	}
+}
 
 async function registerMissingAlert(userId, petId, data) {
 	console.log("userId", userId);
@@ -39,6 +100,37 @@ async function registerMissingAlert(userId, petId, data) {
 	if (!insertedAlert) {
 		throw new Error("Insert missing alert failed");
 	}
+
+	const user = await retrieveUserById(userId);
+	const petResult = await retrievePet(petId);
+	const pet = petResult[0];
+	const alertPayload = { pet, user, alert: data };
+
+	const io = getIO();
+	const allUsersInMunicipality = await getUsersByMunicipality(user.municipality);
+	const connectedUsers = getConnectedUsers();
+
+	allUsersInMunicipality.forEach(u => {
+		if (u.id !== userId && connectedUsers.has(u.id)) {
+			const socketId = connectedUsers.get(u.id);
+			io.to(socketId).emit("newMissingAlert", alertPayload);
+		}
+	});
+
+	const connectedUserIds = getConnectedUserIds();
+
+	const disconnectedUsersWithTokens = allUsersInMunicipality.filter(
+		u => !connectedUserIds.includes(u.id) && u.id !== userId && u.expo_push_token
+	);
+
+	const pushTokens = disconnectedUsersWithTokens.map(u => u.expo_push_token);
+
+	if (pushTokens.length > 0) {
+		const title = 'Nueva Alerta de Mascota Perdida';
+		const body = `Se ha reportado la desaparición de ${alertPayload.pet.name} en ${alertPayload.user.municipality}.`;
+		sendPushNotifications(pushTokens, title, body, alertPayload);
+	}
+
 	return { success: "Missing pet registered", pet_id: Number(petId) };
 };
 
@@ -102,6 +194,8 @@ export const registerFoundAlert = async (userId, petId, data) => {
 	if (!insertedAlert) {
 		throw new Error("Insert found alert failed");
 	}
+
+	await findMatchesAndNotify(insertedAlert.insertId, location);
 
 	return { success: "Found pet registered", pet_id: Number(petId) };
 
@@ -257,6 +351,52 @@ export const updatePetController = async(req, res) => {
 
 		await updatePet(req.params.id, req.body);
 
+		if (req.files && req.files.length > 0) {
+			const petId = req.params.id;
+			const __dirname = path.dirname(fileURLToPath(import.meta.url));
+			const picturesPath = path.join(__dirname, '..', '..', 'pictures', 'pets');
+
+			const faceImage = req.files.find(file => file.fieldname === 'faceImage');
+			if (faceImage) {
+				const facesPath = path.join(picturesPath, 'faces');
+				
+				const oldFaceImage = getPetImageFilenames(petId).face_image;
+				if (oldFaceImage) {
+					const oldFaceImagePath = path.join(facesPath, oldFaceImage);
+					if (fs.existsSync(oldFaceImagePath)) {
+						fs.unlinkSync(oldFaceImagePath);
+					}
+				}
+
+				const ext = path.extname(faceImage.originalname);
+				const newFilename = `${petId}${ext}`;
+				const newPath = path.join(facesPath, newFilename);
+				fs.renameSync(faceImage.path, newPath);
+			}
+
+			const bodyImages = req.files.filter(file => file.fieldname === 'images');
+			if (bodyImages.length > 0) {
+				const bodyPath = path.join(picturesPath, 'body');
+				
+				const oldBodyImages = getPetImageFilenames(petId).images;
+				if (oldBodyImages && oldBodyImages.length > 0) {
+					oldBodyImages.forEach(img => {
+						const oldBodyImagePath = path.join(bodyPath, img);
+						if (fs.existsSync(oldBodyImagePath)) {
+							fs.unlinkSync(oldBodyImagePath);
+						}
+					});
+				}
+
+				bodyImages.forEach((file, index) => {
+					const ext = path.extname(file.originalname);
+					const newFilename = `${petId}_${index + 1}${ext}`;
+					const newPath = path.join(bodyPath, newFilename);
+					fs.renameSync(file.path, newPath);
+				});
+			}
+		}
+
 		return res.status(200).json({ success: "Pet updated" });
 	} catch (err) {
 		console.error("UpdatePet error:", err);
@@ -347,6 +487,7 @@ export const getPetFacePictureController = async (req, res) => {
 		}
 
 		const ext = path.extname(foundFile).toLowerCase();
+
 		const contentTypes = {
 			'.jpg': 'image/jpeg',
 			'.jpeg': 'image/jpeg',
@@ -373,10 +514,22 @@ export const getPetFacePictureController = async (req, res) => {
 	}
 };
 
+export const getPetMatchesController = async (req, res) => {
+    try {
+        const payload = req.user;
+        const matches = await retrievePetMatchesByUserId(payload.id);
+        return res.status(200).json(matches);
+    } catch (err) {
+        console.error("GetPetMatches error:", err.message);
+        return res.status(500).json({ failure: "Couldn't get pet matches" });
+    }
+};
+
 export const getPetBodyPictureController = async (req, res) => {
 
 	try {
 		const { pet_id, image_number } = req.params;
+		console.log(`getPetBodyPictureController: pet_id=${pet_id}, image_number=${image_number}`);
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const bodyPath = path.join(__dirname, '..', '..', 'pictures', 'pets', 'body');
 
@@ -385,16 +538,15 @@ export const getPetBodyPictureController = async (req, res) => {
 
 		for (const ext of extensions) {
 			const filePath = path.join(bodyPath, `${pet_id}_${image_number}${ext}`);
+			console.log(`getPetBodyPictureController: Checking for file at ${filePath}`);
 			if (fs.existsSync(filePath)) {
-
 				foundFile = filePath;
-
 				break;
 			}
 		}
+		console.log(`getPetBodyPictureController: Found file at ${foundFile}`);
 
 		if (!foundFile) {
-
 			return res.status(404).json({ failure: "Pet body picture not found" });
 		}
 
@@ -408,7 +560,7 @@ export const getPetBodyPictureController = async (req, res) => {
 		};
 
 		res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
-		res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+		res.setHeader('Cache-Control', 'public, max-age=86400');
 
 		const fileStream = fs.createReadStream(foundFile);
 		fileStream.pipe(res);
@@ -425,3 +577,55 @@ export const getPetBodyPictureController = async (req, res) => {
 		return res.status(500).json({ failure: "Couldn't get pet body picture" });
 	}
 };
+
+export const testAlertController = async (req, res) => {
+	try {
+		const { municipality } = req.params;
+		const io = getIO();
+
+		const mockData = {
+			pet: {
+				id: 999,
+				name: "Test Pet",
+				species: "DOG",
+			},
+			user: {
+				id: 999,
+				name: "Test User",
+				municipality: municipality,
+			},
+			alert: {
+				description: "This is a test alert.",
+				time: new Date().toISOString(),
+				last_seen_location: "POINT(-103.3496 20.6597)",
+			}
+		};
+
+		io.to(municipality).emit("newMissingAlert", mockData);
+
+		return res.status(200).json({ success: `Test alert sent to ${municipality}` });
+	} catch (err) {
+		console.error("TestAlert error:", err);
+		return res.status(500).json({ failure: "Couldn't send test alert" });
+	}
+};
+
+export const getAdoptionPetsController = async (req, res) => {
+	try {
+		const petsFromDb = await retrieveAdoptionPets();
+
+		const pets = petsFromDb.map(pet => {
+			const imageFilenames = getPetImageFilenames(pet.id);
+			return {
+				...pet,
+				...imageFilenames
+			};
+		});
+
+		return res.status(200).json(pets);
+	} catch (err) {
+		console.error("GetAdoptionPets error:", err.message);
+		return res.status(500).json({ failure: "Couldn't get adoption pets" });
+	}
+};
+

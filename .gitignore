@@ -17,6 +17,7 @@ ios/DerivedData/
 ios/build/
 
 # Misc
+google-services.json
 .DS_Store
 .env
 *.key

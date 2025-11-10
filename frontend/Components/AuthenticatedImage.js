@@ -5,14 +5,20 @@ import store from '../utils/store';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const AuthenticatedImage = ({ petId = 1, type = 'faces', imageNumber, style, contentFit = 'cover' }) => {
+const AuthenticatedImage = ({ petId = 1, type = 'faces', imageNumber, style, contentFit = 'cover', uri, cacheKey }) => {
 	const [imageSource, setImageSource] = useState(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const setupImage = async () => {
-			console.log('AuthenticatedImage - petId:', petId, 'type:', type, 'imageNumber:', imageNumber);
+			console.log('AuthenticatedImage - petId:', petId, 'type:', type, 'imageNumber:', imageNumber, 'uri:', uri);
 			
+			if (uri) {
+				setImageSource({ uri });
+				setLoading(false);
+				return;
+			}
+
 			if (!petId) {
 				console.log('No petId provided');
 				setLoading(false);
@@ -31,6 +37,10 @@ const AuthenticatedImage = ({ petId = 1, type = 'faces', imageNumber, style, con
 					url = `${API_URL}/api/pet-pictures/${petId}/body/${imageNumber || 1}`;
 				}
 
+				if (cacheKey) {
+					url += `?t=${cacheKey}`;
+				}
+
 				setImageSource({
 					uri: url,
 					headers: {
@@ -45,7 +55,7 @@ const AuthenticatedImage = ({ petId = 1, type = 'faces', imageNumber, style, con
 		};
 
 		setupImage();
-	}, [petId, type, imageNumber]);
+	}, [petId, type, imageNumber, uri, cacheKey]);
 
 	if (loading) {
 		return (
