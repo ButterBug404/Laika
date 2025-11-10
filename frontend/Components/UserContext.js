@@ -1,8 +1,8 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import axios from "axios";
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
 import { jwtDecode } from 'jwt-decode';
+import store from '../utils/store.js';
 
 const UserContext = createContext();
 
@@ -17,6 +17,31 @@ export const useUser = () => {
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkStoredToken = async () => {
+      const token = await store.getValueFor('jwt');
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          // Check if token is expired
+          if (decodedToken.exp * 1000 < Date.now()) {
+            console.log("Stored token is expired.");
+            await store.delete('jwt');
+          } else {
+            console.log("Stored token is valid.");
+            setCurrentUser(decodedToken);
+            setIsLoggedIn(true);
+          }
+        } catch (error) {
+          console.error("Failed to decode stored token:", error);
+          await store.delete('jwt');
+        }
+      }
+    };
+
+    checkStoredToken();
+  }, []);
 
 	const loginUser = async (email, password) => {
 		console.log("API URL:", apiUrl);

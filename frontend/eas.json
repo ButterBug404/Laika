@@ -6,10 +6,7 @@
   "build": {
     "development": {
       "developmentClient": true,
-			"distribution": "internal",
-			"env": {
-				"GOOGLE_MAPS_API_KEY": "AIzaSyB8dNUTvh1oxt8xzbHUZ97ICmmVhmMf774"
-			}
+			"distribution": "internal"
 		},
 		"preview": {
 			"distribution": "internal"
