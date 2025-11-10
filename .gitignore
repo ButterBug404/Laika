@@ -7,6 +7,11 @@ yarn.lock
 .expo/
 .expo-shared/
 
+
+# eas
+eas.json
+.easignore
+
 # Build artifacts
 android/
 android/build/
@@ -17,13 +22,13 @@ ios/DerivedData/
 ios/build/
 
 # Misc
-google-services.json
 .DS_Store
 .env
 *.key
 
 # Uploaded pictures
 /backend/pictures/
+
 
 # MariaDB data directories
 **/mysql/
@@ -34,3 +39,8 @@ google-services.json
 *.err
 *.pid
 *.sock
+
+# Local builds
+*.apk
+*.aab
+*.ipa

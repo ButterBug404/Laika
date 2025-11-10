@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import axios from 'axios';
 
@@ -45,13 +46,15 @@ export async function registerForPushNotificationsAsync(userId, jwtToken) {
 		});
 
 		let pushTokenObject;
+		const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
 
 		try {
 			pushTokenObject = await Promise.race([
-				Notifications.getExpoPushTokenAsync(),
+				Notifications.getExpoPushTokenAsync({projectId}),
 				timeoutPromise
 			]);
 		} catch (error) {
+			console.log("push notification error: ", error.message);
 			return;
 		}
 		token = pushTokenObject.data;

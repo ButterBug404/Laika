@@ -1,8 +1,0 @@
-.easignore
-../backend/**
-../.git/**
-node_modules/**
-.expo/**
-.vscode/**
-*.log
-.DS_Store

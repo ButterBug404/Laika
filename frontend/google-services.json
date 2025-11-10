@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "57742191145",
+    "project_id": "laika-7f34a",
+    "storage_bucket": "laika-7f34a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57742191145:android:39ca981d4655efe999ca38",
+        "android_client_info": {
+          "package_name": "com.laika.proyectomodular"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDfypvT_-l0hG0yozcvwXaOppnrj9aaRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
