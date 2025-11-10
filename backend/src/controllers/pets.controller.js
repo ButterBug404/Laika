@@ -582,6 +582,7 @@ export const testAlertController = async (req, res) => {
 	try {
 		const { municipality } = req.params;
 		const io = getIO();
+		const testUserId = 0; // A placeholder ID for the "sender" in a test scenario
 
 		const mockData = {
 			pet: {
@@ -590,7 +591,7 @@ export const testAlertController = async (req, res) => {
 				species: "DOG",
 			},
 			user: {
-				id: 999,
+				id: testUserId,
 				name: "Test User",
 				municipality: municipality,
 			},
@@ -601,9 +602,26 @@ export const testAlertController = async (req, res) => {
 			}
 		};
 
+		// Emit to connected users in the municipality
 		io.to(municipality).emit("newMissingAlert", mockData);
 
-		return res.status(200).json({ success: `Test alert sent to ${municipality}` });
+		// Logic to send push notifications to disconnected users
+		const allUsersInMunicipality = await getUsersByMunicipality(municipality);
+		const connectedUserIds = getConnectedUserIds();
+
+		const disconnectedUsersWithTokens = allUsersInMunicipality.filter(
+			u => !connectedUserIds.includes(u.id) && u.id !== testUserId && u.expo_push_token
+		);
+
+		const pushTokens = disconnectedUsersWithTokens.map(u => u.expo_push_token);
+
+		if (pushTokens.length > 0) {
+			const title = 'Alerta de Prueba de Mascota';
+			const body = `Se ha enviado una alerta de prueba en ${municipality}.`;
+			sendPushNotifications(pushTokens, title, body, mockData);
+		}
+
+		return res.status(200).json({ success: `Test alert sent to ${municipality} (connected and disconnected users)` });
 	} catch (err) {
 		console.error("TestAlert error:", err);
 		return res.status(500).json({ failure: "Couldn't send test alert" });

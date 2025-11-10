@@ -471,6 +471,39 @@ const AppContent = () => {
 						setIsAlertModalVisible(true);
 					});
 				}
+
+				// Handle notifications received while the app is open
+				const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+					// This listener fires whenever a notification is received while the app is foregrounded
+					// We might want to show an in-app alert or update UI, but for now, we'll just log it.
+					console.log("Notification received while app is open:", notification);
+				});
+
+				// Handle notification responses (when user taps on a notification)
+				const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+					console.log("Notification response received:", response);
+					const { data } = response.notification.request.content;
+					if (data && data.pet && data.user && data.alert) {
+						setAlertData(data);
+						setIsAlertModalVisible(true);
+					}
+				});
+
+				// Handle case where app is opened by tapping a notification (app was closed)
+				const lastNotificationResponse = await Notifications.getLastNotificationResponseAsync();
+				if (lastNotificationResponse) {
+					console.log("App opened by notification:", lastNotificationResponse);
+					const { data } = lastNotificationResponse.notification.request.content;
+					if (data && data.pet && data.user && data.alert) {
+						setAlertData(data);
+						setIsAlertModalVisible(true);
+					}
+				}
+
+				return () => {
+					Notifications.removeNotificationSubscription(notificationListener);
+					Notifications.removeNotificationSubscription(responseListener);
+				};
 			}
 		};
 
