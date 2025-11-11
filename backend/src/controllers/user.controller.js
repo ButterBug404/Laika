@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { hashPassword, verifyPassword } from '../utils/passwordUtils.js';
+import { processProfileImage } from '../utils/imageProcessor.js'; // Import the image processor
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,6 +122,7 @@ export const updateProfilePicture = async (req, res) => {
 		const profilePictureDir = path.join(__dirname, '../../pictures/profile');
 		const potentialExtensions = ['.jpeg', '.jpg', '.png', '.webp'];
 
+		// Delete old profile pictures regardless of extension
 		for (const ext of potentialExtensions) {
 			const potentialPath = path.join(profilePictureDir, `${userId}${ext}`);
 			if (fs.existsSync(potentialPath)) {
@@ -129,10 +131,12 @@ export const updateProfilePicture = async (req, res) => {
 			}
 		}
 
-		const { path: tempPath, originalname } = req.file;
-		const extension = path.extname(originalname);
-		const newPath = path.join(profilePictureDir, `${userId}${extension}`);
-		fs.renameSync(tempPath, newPath);
+		if (!req.file) {
+			return res.status(400).json({ failure: "No file uploaded" });
+		}
+
+		// Process and save the new image as webp
+		await processProfileImage(req.file.path, userId);
 
 		res.status(200).json({ success: "Profile picture updated" });
 	} catch (err) {

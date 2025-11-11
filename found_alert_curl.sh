@@ -1,0 +1,19 @@
+curl -X POST "YOUR_API_URL/api/register_pet" \
+-H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+-F "record_type=FOUND" \
+-F "name=Found Dog" \
+-F "species=DOG" \
+-F "breed=Labrador" \
+-F "color=Black" \
+-F "age=3" \
+-F "age_unit=YEARS" \
+-F "sex=MALE" \
+-F "size=BIG" \
+-F "vaccinated=false" \
+-F "description=Found in the park, very friendly." \
+-F "skin_condition=false" \
+-F "time=2025-11-10T10:00:00Z" \
+-F "last_seen_location=POINT(20.636430696361757 -103.25490178965572)" \
+-F "contact_info=3312345678" \
+-F "contact_method=WHATSAPP" \
+-F "faceImage=@/path/to/your/image.jpg

@@ -27,9 +27,10 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { getMascotas, registerAlert, updateMascotaData, deleteMascota, deletePetAlert } from './MascotasData';
+import { getMascotas, registerAlert, updateMascotaData, deleteMascota, deletePetAlert, getMatches, deleteAdoption } from './MascotasData';
 import { razasPerro, razasGato, razasConejo, razasAve, colores, EspecieIcon } from './registrar';
 import AuthenticatedImage from './AuthenticatedImage';
+import MatchContactModal from './MatchContactModal';
 
 
 const { width, height } = Dimensions.get('window');
@@ -53,6 +54,7 @@ const PREDEFINED_LOCATIONS = [
 const MisMascotas = () => {
 	const route = useRoute();
 	const [mascotas, setMascotas] = useState([]);
+	const [matches, setMatches] = useState([]);
 	const [editingId, setEditingId] = useState(null);
 	const [editData, setEditData] = useState({});
 	const [showMissingForm, setShowMissingForm] = useState(false);
@@ -89,9 +91,23 @@ const MisMascotas = () => {
 	const [possibleMatches, setPossibleMatches] = useState({});
 	const [showMatchDetails, setShowMatchDetails] = useState(false);
 	const [selectedMatch, setSelectedMatch] = useState(null);
+	const [showMatchDetailModal, setShowMatchDetailModal] = useState(false);
+	const [selectedMatchDetails, setSelectedMatchDetails] = useState(null);
 	const [imageUpdateKey, setImageUpdateKey] = useState(Date.now());
+	const [isMatchContactModalVisible, setMatchContactModalVisible] = useState(false);
+	const [selectedMatchForContact, setSelectedMatchForContact] = useState(null);
 
 	const isFocused = useIsFocused();
+
+	const handleShowMatchDetails = (match) => {
+		setSelectedMatchDetails(match);
+		setShowMatchDetailModal(true);
+	};
+
+	const handleShowMatchContactModal = (match) => {
+		setSelectedMatchForContact(match);
+		setMatchContactModalVisible(true);
+	};
 
 	const getMascotasByType = (type) => {
 		return mascotas.filter(pet => pet.alert_status === type);
@@ -318,10 +334,14 @@ const MisMascotas = () => {
 				{ 
 					text: 'Confirmar', 
 					onPress: async () => {
-						// TODO: Call API to update adoption status
-						const updatedMascotas = await updateMascotaEstado(id, 'Adoptada');
-						setMascotas([...updatedMascotas]);
-						Alert.alert('Éxito', 'Mascota marcada como adoptada');
+						const result = await deleteAdoption(id);
+						if (result && result.success) {
+							const allMascotas = await getMascotas();
+							setMascotas(allMascotas.filter(pet => pet.alert_status !== 'FOUND'));
+							Alert.alert('Éxito', 'Mascota marcada como adoptada');
+						} else {
+							Alert.alert('Error', 'No se pudo marcar la mascota como adoptada.');
+						}
 					}
 				}
 			]
@@ -546,8 +566,8 @@ const MisMascotas = () => {
 	};
 
 	const fetchPossibleMatches = async () => {
-		// TODO: Implement API call here
-		console.log('TODO: Fetch matches from API');
+		const matchesData = await getMatches();
+		setMatches(matchesData);
 	};
 
 	const hasPossibleMatch = (petId) => {
@@ -589,7 +609,7 @@ const MisMascotas = () => {
 	return (
 		<SafeAreaProvider>
 		<SafeAreaView style={styles.container}>
-		<ScrollView style={styles.container}>
+				<ScrollView style={styles.container}>
 		<Text style={styles.titulo}>Mis Mascotas registradas</Text>
 
 		{mascotas.length > 0 ? (
@@ -607,11 +627,14 @@ const MisMascotas = () => {
 					style={styles.editInput}
 					value={editData.name}
 					onChangeText={(text) => handleEditChange('name', text)}
+
 					placeholder="Nombre"
+
 					/>
 					<TextInput
 					style={styles.editInput}
 					value={editData.age}
+
 					onChangeText={(text) => handleEditChange('age', text)}
 					placeholder="Edad"
 					/>
@@ -639,8 +662,10 @@ const MisMascotas = () => {
 					onChangeText={(text) => handleEditChange('description', text)}
 					placeholder="Descripción"
 					multiline
+
 					numberOfLines={2}
 					/>
+
 
 					<View style={styles.editButtonsContainer}>
 					<TouchableOpacity
@@ -673,15 +698,18 @@ const MisMascotas = () => {
 						styles.petTypeLabel, 
 						{ backgroundColor: getPetTypeColor(mascota) }
 					]}>
+
 					{getPetTypeLabel(mascota)}
 					</Text>
 					</View>
 					</View>
 
+
 					<Text style={styles.verticalDetail}><Text style={styles.boldLabel}>Edad:</Text> {mascota.age}</Text>
 					<Text style={styles.verticalDetail}><Text style={styles.boldLabel}>Raza:</Text> {mascota.breed}</Text>
 					<Text style={styles.verticalDetail}><Text style={styles.boldLabel}>Color:</Text> {mascota.color}</Text>
 					<Text style={styles.verticalDetail}><Text style={styles.boldLabel}>Tamaño:</Text> {mascota.size}</Text>
+
 
 					<View style={styles.buttonRow}>
 					<TouchableOpacity
@@ -704,6 +732,7 @@ const MisMascotas = () => {
 						style={styles.botonAdoptada}
 						onPress={() => handleMascotaAdoptada(mascota.id)}
 						>
+
 						<Text style={styles.botonTexto}>Mascota Adoptada</Text>
 						</TouchableOpacity>
 					)
@@ -739,7 +768,42 @@ const MisMascotas = () => {
 			No hay mascotas registradas todavía.
 			</Text>
 		)}
+
+		<Text style={styles.titulo}>Coincidencias Encontradas</Text>
+		{matches.length > 0 ? (
+			<View>
+			{matches.map((item) => (
+				<TouchableOpacity key={item.match_id.toString()} onPress={() => handleShowMatchContactModal(item)}>
+					<View style={styles.matchCard}>
+						<Text style={styles.matchTitle}>Coincidencia para: {item.missing_pet_name}</Text>
+						<View style={styles.matchContent}>
+							<View style={styles.matchPetContainer}>
+								<AuthenticatedImage petId={item.missing_pet_id} type="faces" style={styles.matchImage} />
+								<Text style={styles.matchPetName}>{item.missing_pet_name} (Tu mascota)</Text>
+							</View>
+							<View style={styles.matchConfidenceContainer}>
+								<Text style={styles.matchConfidenceValue}>{(item.confidence_level * 100).toFixed(0)}%</Text>
+								<Text style={styles.matchConfidenceLabel}>Confianza</Text>
+							</View>
+							<View style={styles.matchPetContainer}>
+								<AuthenticatedImage petId={item.found_pet_id} type="faces" style={styles.matchImage} />
+								<Text style={styles.matchPetName}>{item.found_pet_name} (Encontrada)</Text>
+							</View>
+						</View>
+					</View>
+				</TouchableOpacity>
+			))}
+			</View>
+		) : (
+			<Text style={styles.noMascotasText}>No se han encontrado coincidencias.</Text>
+		)}
 		</ScrollView>
+
+		<MatchContactModal
+			visible={isMatchContactModalVisible}
+			matchData={selectedMatchForContact}
+			onClose={() => setMatchContactModalVisible(false)}
+		/>
 
 		<Modal
 		visible={showPetDetails}
@@ -2301,6 +2365,56 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		fontSize: 16,
 	},
+	matchCard: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 15,
+        marginVertical: 10,
+        marginHorizontal: 5,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    matchTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    matchContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    matchPetContainer: {
+        alignItems: 'center',
+        width: '30%',
+    },
+    matchImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        marginBottom: 5,
+    },
+    matchPetName: {
+        fontSize: 12,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    matchConfidenceContainer: {
+        alignItems: 'center',
+    },
+    matchConfidenceValue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#4CAF50',
+    },
+    matchConfidenceLabel: {
+        fontSize: 12,
+        color: '#666',
+    },
 });
 
 

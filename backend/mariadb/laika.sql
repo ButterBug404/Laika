@@ -137,13 +137,11 @@ CREATE TABLE `pet_alerts` (
 	FOREIGN KEY (`pet_id`) REFERENCES `pets`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `pet_alerts` (`user_id`, `pet_id`, `status`, `time`, `last_seen_location`, `description`, `contact_info`, `contact_method`, `has_reward`, `reward_description`, `reward_amount`) VALUES
-(5, 15, 'MISSING', 'Hace 2 dias en la tarde', ST_GeomFromText('POINT(20.636430696361757 -103.25490178965572)'), 'Lobo se perdió durante nuestro paseo de la tarde. Lleva un collar rojo con placas. Es muy amigable pero puede estar asustado.', '3356789012', 'BOTH', TRUE, 'Recompensa en efectivo por regresarlo sano y salvo', 2000.00),
-(8, 18, 'MISSING', 'Ayer en la mañana', ST_GeomFromText('POINT(20.636430696361757 -103.25490178965572)'), 'Negrita se escapó por una ventana abierta. Es tímida con extraños. Por favor manejarla con cuidado si la encuentran.', '3389012345', 'WHATSAPP', TRUE, 'Ofresco recompensa', 1000.00);
-
-
-
-
+INSERT INTO `pet_alerts` 
+(`user_id`, `pet_id`, `status`, `time`, `last_seen_location`, `description`, `contact_info`, `contact_method`, `has_reward`, `reward_description`, `reward_amount`)
+VALUES
+(5, 15, 'MISSING', 'Hoy en la tarde', ST_GeomFromText('POINT(-103.25490178965572 20.636430696361757)'), 'Lobo se perdió...', '3356789012', 'BOTH', TRUE, 'Recompensa...', 2000.00),
+(8, 18, 'MISSING', 'Ayer en la mañana', ST_GeomFromText('POINT(-103.25 20.63)'),'Gata desaparecida...', '3389012345', 'WHATSAPP', FALSE, NULL, NULL);
 
 CREATE TABLE `pet_matches` (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,

@@ -13,44 +13,84 @@ import {
 	updatePet,
 	deletePet,
 	deletePetAlert,
+	updateAdoptionByPetId,
 	retrieveMissingPetsNearLocation,
 	insertPetMatch,
 	retrieveUserById,
 	getUsersByMunicipality,
-	retrieveAdoptionPets
+	retrieveAdoptionPets,
+	retrieveAdoptionByPetId,
+	retrievePetMatchesByUserId,
+	deleteAdoption
 } from "./database.js";
 import {
 	verifyToken
 } from "../utils/jwt.js";
 import { compareImages, loadRecognitionModel } from '../utils/imageRecognitionService.js';
 import axios from 'axios';
+import { processPetImage } from '../utils/imageProcessor.js';
 
 loadRecognitionModel();
 
 async function comparePetImagesById(foundPetId, missingPetId) {
-    const foundPetImage = getPetImageFilenames(foundPetId).face_image;
-    const missingPetImage = getPetImageFilenames(missingPetId).face_image;
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const facesPath = path.join(__dirname, '..', '..', 'pictures', 'pets', 'faces');
 
-    if (!foundPetImage || !missingPetImage) {
-        console.warn(`Missing image for pet ${foundPetId} or ${missingPetId}. Skipping comparison.`);
+    const foundPetImagePath = path.join(facesPath, `${foundPetId}.webp`);
+    const missingPetImagePath = path.join(facesPath, `${missingPetId}.webp`);
+
+		console.log("fpip: ", foundPetImagePath);
+		console.log("mpip: ", missingPetImagePath);
+
+    if (!fs.existsSync(foundPetImagePath) || !fs.existsSync(missingPetImagePath)) {
+        console.warn(`Missing face image for pet ${foundPetId} or ${missingPetId}. Skipping comparison.`);
         return 0;
     }
-
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const petsPicturesPath = path.join(__dirname, '..', '..', 'pictures', 'pets');
-    const foundPetImagePath = path.join(petsPicturesPath, 'faces', foundPetImage);
-    const missingPetImagePath = path.join(petsPicturesPath, 'faces', missingPetImage);
 
     return await compareImages(foundPetImagePath, missingPetImagePath);
 }
 
-async function findMatchesAndNotify(foundPetAlertId, foundPetLocation, threshold = 0.8) {
+async function findMatchesAndNotify(foundPetId, foundPetAlertId, foundPetLocation, threshold = 0.8) {
+    console.log("found alert id: ", foundPetAlertId);
     const missingPets = await retrieveMissingPetsNearLocation(foundPetLocation);
 
     for (const missingPet of missingPets) {
-        const confidence = await comparePetImagesById(foundPetAlertId, missingPet.pet_id);
+        const confidence = await comparePetImagesById(foundPetId, missingPet.id);
         if (confidence > threshold) {
             await insertPetMatch([missingPet.alert_id, foundPetAlertId, confidence]);
+
+            const missingPetOwnerId = missingPet.user_id;
+            const missingPetOwner = await retrieveUserById(missingPetOwnerId);
+
+            if (missingPetOwner) {
+                const foundPetResult = await retrievePet(foundPetId);
+                const foundPet = foundPetResult[0];
+
+                const matchPayload = {
+                    missingPet: missingPet,
+                    foundPet: foundPet,
+                    confidence: confidence,
+                    foundPetAlertId: foundPetAlertId
+                };
+
+                const replacer = (key, value) => typeof value === 'bigint' ? Number(value) : value;
+                const cleanPayload = JSON.parse(JSON.stringify(matchPayload, replacer));
+
+                const io = getIO();
+                const connectedUsers = getConnectedUsers();
+
+                if (connectedUsers.has(missingPetOwnerId)) {
+                    const socketId = connectedUsers.get(missingPetOwnerId);
+                    io.to(socketId).emit("newPetMatch", cleanPayload);
+                    console.log(`Sent socket notification for pet match to user ${missingPetOwnerId}`);
+                } else if (missingPetOwner.expo_push_token) {
+                    const pushToken = missingPetOwner.expo_push_token;
+                    const title = `¡Posible coincidencia para ${missingPet.name}!`;
+                    const body = `Hemos encontrado una mascota parecida con una confianza del ${Math.round(confidence * 100)}%.`;
+                    sendPushNotifications([pushToken], title, body, cleanPayload);
+                    console.log(`Sent push notification for pet match to user ${missingPetOwnerId}`);
+                }
+            }
         }
     }
 }
@@ -83,6 +123,7 @@ async function registerMissingAlert(userId, petId, data) {
 	console.log("petId", petId);
 	console.log("data.time", data.time);
 	const location = parseLocation(data.last_seen_location);
+	console.log("location: ", location);
 	const hasReward = data.has_reward === 'true' || data.has_reward === true;
 	const insertedAlert = await insertPetAlert([
 		userId,
@@ -175,6 +216,31 @@ export const registerAdoption = async (userId, petId, data) => {
 	return { success: "Adoption pet registered", pet_id: Number(petId) };
 };
 
+export const registerFoundAlertController = async (req, res) => {
+    try {
+        const payload = req.user;
+        const exists = await userExists(payload.id);
+        if (!exists) {
+            console.log("User does not exist");
+            return res.status(400).json({ failure: "User not found" });
+        }
+
+        const { pet_id } = req.body;
+
+        const pet = await retrievePet(pet_id);
+        if (!pet) {
+            return res.status(404).json({ failure: "Pet not found" });
+        }
+
+        const result = await registerFoundAlert(payload.id, pet_id, req.body);
+
+        return res.status(201).json(result);
+    } catch (err) {
+        console.error("RegisterFoundAlert error:", err);
+        return res.status(500).json({ failure: "Couldn't complete found alert registration" });
+    }
+};
+
 export const registerFoundAlert = async (userId, petId, data) => {
 	const location = parseLocation(data.last_seen_location);
 	const insertedAlert = await insertPetAlert([
@@ -195,15 +261,19 @@ export const registerFoundAlert = async (userId, petId, data) => {
 		throw new Error("Insert found alert failed");
 	}
 
-	await findMatchesAndNotify(insertedAlert.insertId, location);
+	await findMatchesAndNotify(petId, insertedAlert.insertId, location);
 
 	return { success: "Found pet registered", pet_id: Number(petId) };
 
 };
 
 const parseLocation = (locationString) => {
-    const [longitude, latitude] = locationString.split(",").map(parseFloat);
-    return `POINT(${longitude} ${latitude})`;
+		console.log("lS: ", locationString);
+    const [latitude, longitude] = locationString.split(",").map(parseFloat);
+		console.log("CD: ", latitude);
+		console.log("CC: ", longitude);
+    return `POINT(${latitude} ${longitude})`;
+
 };
 
 export const registerPetController = async(req, res) => {
@@ -214,7 +284,6 @@ export const registerPetController = async(req, res) => {
 			console.log("User does not exist");
 			return res.status(400).json({ failure: "User not found" });
 		}
-		console.log("Magic");
 		console.log(req.body);
 		const {
 			record_type, name, species, breed,
@@ -236,16 +305,20 @@ export const registerPetController = async(req, res) => {
 		const petId = Number(insertedPet.insertId);
 		console.log('Type of insertId:', typeof petId);
 		if (req.files && req.files.length > 0) {
-			console.log("Magic 4");
-			req.files.forEach((file, index) => {
-				console.log(file);
-				const dir = path.dirname(file.path);
-				const ext = path.extname(file.originalname);
-				const newFilename = `${petId}_${index + 1}${ext}`;
-				const newPath = path.join(dir, newFilename);
-				console.log(`Attempting to rename: ${file.path} to ${newPath}`);
-				fs.renameSync(file.path, newPath);
-			});
+			console.log("Processing pet images...");
+
+			const faceImage = req.files.find(file => file.fieldname === 'faceImage');
+			if (faceImage) {
+				await processPetImage(faceImage.path, petId, null, true); // Process as face image
+			}
+
+			const bodyImages = req.files.filter(file => file.fieldname === 'images');
+			if (bodyImages.length > 0) {
+				for (let i = 0; i < bodyImages.length; i++) {
+					const file = bodyImages[i];
+					await processPetImage(file.path, petId, i + 1, false); // Process as body image
+				}
+			}
 		}
 		console.log("Magic 5");
 		let result;
@@ -368,10 +441,7 @@ export const updatePetController = async(req, res) => {
 					}
 				}
 
-				const ext = path.extname(faceImage.originalname);
-				const newFilename = `${petId}${ext}`;
-				const newPath = path.join(facesPath, newFilename);
-				fs.renameSync(faceImage.path, newPath);
+				await processPetImage(faceImage.path, petId, null, true); // Process as face image
 			}
 
 			const bodyImages = req.files.filter(file => file.fieldname === 'images');
@@ -388,12 +458,10 @@ export const updatePetController = async(req, res) => {
 					});
 				}
 
-				bodyImages.forEach((file, index) => {
-					const ext = path.extname(file.originalname);
-					const newFilename = `${petId}_${index + 1}${ext}`;
-					const newPath = path.join(bodyPath, newFilename);
-					fs.renameSync(file.path, newPath);
-				});
+				for (let i = 0; i < bodyImages.length; i++) {
+					const file = bodyImages[i];
+					await processPetImage(file.path, petId, i + 1, false); // Process as body image
+				}
 			}
 		}
 
@@ -412,6 +480,8 @@ export const deletePetController = async(req, res) => {
 			console.log("User does not exist");
 			return res.status(400).json({ failure: "User not found" });
 		}
+
+		console.log("Delete pet: ", req.params.id);
 
 		await deletePet(req.params.id);
 
@@ -647,3 +717,121 @@ export const getAdoptionPetsController = async (req, res) => {
 	}
 };
 
+export const deleteAdoptionController = async (req, res) => {
+	try {
+		const payload = req.user;
+		const { petId } = req.params;
+
+		const petResult = await retrievePet(petId);
+		if (!petResult || petResult.length === 0) {
+			return res.status(404).json({ failure: "Pet not found" });
+		}
+
+		const pet = petResult[0];
+		if (pet.user_id !== payload.id) {
+			return res.status(403).json({ failure: "You are not authorized to modify this pet's adoption status" });
+		}
+
+		const result = await deleteAdoption(petId);
+
+		if (result && result.affectedRows > 0) {
+			return res.status(200).json({ success: "Adoption record deleted" });
+		} else {
+			return res.status(404).json({ failure: "Adoption record not found or already deleted" });
+		}
+	} catch (err) {
+		console.error("DeleteAdoption error:", err);
+		return res.status(500).json({ failure: "Couldn't delete adoption record" });
+	}
+};
+
+
+export const registerPetControllerButTest = async(req, res) => {
+	try {
+		console.log("THE BODY: ", req.body);
+		const {
+			record_type, name, species, breed,
+			color, age, age_unit, sex,
+			size, vaccinated, description, skin_condition
+		} = req.body;
+		const insertedPet = await insertPet([
+			1,
+			name, species, breed,
+			color, age, age_unit, sex,
+			size, vaccinated, description, skin_condition
+		]);
+		if (!insertedPet) {
+			console.log("Insert pet failed");
+			return res.status(500).json({ failure: "Couldn't complete pet registration" });
+
+		}
+
+		const petId = Number(insertedPet.insertId);
+
+		console.log('Type of insertId:', typeof petId);
+		if (req.files && req.files.length > 0) {
+			console.log("Processing pet images...");
+
+			const faceImage = req.files.find(file => file.fieldname === 'faceImage');
+			if (faceImage) {
+				await processPetImage(faceImage.path, petId, null, true); // Process as face image
+			}
+
+			const bodyImages = req.files.filter(file => file.fieldname === 'images');
+			if (bodyImages.length > 0) {
+				for (let i = 0; i < bodyImages.length; i++) {
+					const file = bodyImages[i];
+					await processPetImage(file.path, petId, i + 1, false); // Process as body image
+				}
+			}
+		}
+		console.log("Magic 5");
+		let result;
+		if (record_type === 'LOST') {
+			result = await registerMissingAlert(1, petId, req.body);
+		} else if (record_type === 'ADOPTION') {
+			result = await registerAdoption(1, petId, req.body);
+		} else if (record_type === 'FOUND') {
+			result = await registerFoundAlert(1, petId, req.body);
+		} else {
+			result = { success: "Pet registered", petId };
+		}
+		console.log("Magic 6");
+		console.log(result);
+
+		return res.status(201).json(result);
+	} catch (err) {
+		console.error("RegisterPet error:", err);
+		return res.status(500).json({ failure: "Couldn't complete pet registration" });
+	}
+};
+
+export const updateAdoptionController = async(req, res) => {
+	try {
+		const payload = req.user;
+		const exists = await userExists(payload.id);
+		if (!exists) {
+			console.log("User does not exist");
+			return res.status(400).json({ failure: "User not found" });
+		}
+
+		const { pet_id } = req.params;
+
+		const pet = await retrievePet(pet_id);
+		if (!pet || pet[0].user_id !== payload.id) {
+			return res.status(403).json({ failure: "Pet not found or you are not the owner" });
+		}
+
+		const adoption = await retrieveAdoptionByPetId(pet_id);
+		if (!adoption) {
+			return res.status(404).json({ failure: "Adoption not found for this pet" });
+		}
+
+		await updateAdoptionByPetId(pet_id, req.body);
+
+		return res.status(200).json({ success: "Adoption updated" });
+	} catch (err) {
+		console.error("UpdateAdoption error:", err);
+		return res.status(500).json({ failure: "Couldn't update adoption" });
+	}
+};

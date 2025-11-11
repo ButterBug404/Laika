@@ -50,7 +50,7 @@ export async function compareImages(imagePath1, imagePath2) {
     const embedding2 = model.predict(img2);
 
     const similarity = tf.sum(tf.mul(embedding1, embedding2));
-    const simValue = (await similarity.array())[0];
+    const simValue = await similarity.array();
 
     img1.dispose();
     img2.dispose();

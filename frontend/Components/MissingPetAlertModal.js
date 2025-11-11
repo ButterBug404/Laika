@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, View, Text, Image, Button, Linking, StyleSheet, TouchableOpacity } from 'react-native';
+import { Modal, View, Text, Button, Linking, StyleSheet, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AuthenticatedImage from './AuthenticatedImage';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -24,7 +25,18 @@ const MissingPetAlertModal = ({ visible, alertData, onClose }) => {
 		return null;
 	}
 
-	const { pet, user, alert } = alertData;
+	// Adapt payload based on whether it's a match or a simple alert
+	const isMatch = !!alertData.missingPet;
+	const pet = isMatch ? alertData.missingPet : alertData.pet;
+	const alert = isMatch 
+		? { 
+			description: `¡Coincidencia encontrada con una confianza del ${Math.round(alertData.confidence * 100)}%!\n\nDescripción de la mascota encontrada: ${alertData.foundPet.description}`,
+			last_seen_location: alertData.missingPet.last_seen_location
+		}
+		: alertData.alert;
+	const user = isMatch ? alertData.foundPet.user : alertData.user; // Assuming user info is needed
+	const title = isMatch ? "¡Posible Coincidencia Encontrada!" : "¡Alerta de Mascota Perdida!";
+
 	const location = parseLocation(alert.last_seen_location);
 
 	const openInGoogleMaps = () => {
@@ -34,14 +46,12 @@ const MissingPetAlertModal = ({ visible, alertData, onClose }) => {
 		}
 	};
 
-	const petImageUrl = `${apiUrl}/api/pet-pictures/${pet.id}/faces`;
-
 	return (
 		<Modal
 		animationType="slide"
-		transparent={true}
-		visible={visible}
-		onRequestClose={onClose}
+			transparent={true}
+			visible={visible}
+			onRequestClose={onClose}
 		>
 		<View style={styles.centeredView}>
 		<View style={styles.modalView}>
@@ -49,9 +59,9 @@ const MissingPetAlertModal = ({ visible, alertData, onClose }) => {
 		<Ionicons name="close-circle" size={30} color="#b04f4f" />
 		</TouchableOpacity>
 
-		<Text style={styles.modalTitle}>¡Alerta de Mascota Perdida!</Text>
+		<Text style={styles.modalTitle}>{title}</Text>
 
-		<Image source={{ uri: petImageUrl }} style={styles.petImage} />
+		<AuthenticatedImage petId={pet.id} type="faces" style={styles.petImage} />
 
 		<Text style={styles.petName}>{pet.name}</Text>
 		<Text style={styles.description}>{alert.description}</Text>
@@ -64,8 +74,8 @@ const MissingPetAlertModal = ({ visible, alertData, onClose }) => {
 			initialRegion={{
 				latitude: location.latitude,
 					longitude: location.longitude,
-					latitudeDelta: 0.01,
-					longitudeDelta: 0.01,
+				latitudeDelta: 0.01,
+				longitudeDelta: 0.01,
 			}}
 			>
 			<Marker
@@ -135,7 +145,7 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	map: {
-		width: '100%',
+		width: 'w-full',
 		height: 200,
 		borderRadius: 10,
 		marginBottom: 15,

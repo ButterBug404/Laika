@@ -149,7 +149,7 @@ const Registrar = () => {
 	const [loadingLocation, setLoadingLocation] = useState(false);
 
 	// Add missing pet specific fields
-	
+
 	const [recompensa, setRecompensa] = useState('');
 	const [tieneRecompensa, setTieneRecompensa] = useState('no');
 	const [montoRecompensa, setMontoRecompensa] = useState('');
@@ -387,74 +387,35 @@ const Registrar = () => {
 			// Validate reward amount if reward is selected
 			if (tipoRegistro === 'perdida' && tieneRecompensa === 'si' && (!montoRecompensa || parseInt(montoRecompensa) <= 0)) {
 				Alert.alert('Error', 'Por favor, ingresa una cantidad válida para la recompensa');
-
 				return;
 			}
 
-			const token = await store.getValueFor('jwt');
-			if (!token) {
-				Alert.alert('Error', 'No se ha iniciado sesión');
-				return;
-			}
-
-			const formData = new FormData();
-			formData.append('record_type', translateRecordType(tipoRegistro));
-			formData.append('name', nombre);
-			formData.append('species', translateSpecies(especie));
-			formData.append('breed', raza);
-
-			formData.append('color', color);
-			formData.append('age', edad);
-			formData.append('sex', translateSex(sexo));
-			formData.append('size', translateSize(tamaño));
-			formData.append('age_unit', translateAgeUnit(edadUnidad));
-			formData.append('vaccinated', vacunado);
-			formData.append('skin_condition', enfermedadPiel);
-
-			formData.append('contact_info', contacto);
-			formData.append('contact_method', translateContactMethod(metodoContacto));
-			formData.append('description', descripcion);
-
-			if (tipoRegistro === 'perdida') {
-				formData.append('has_reward', tieneRecompensa === 'si');
-				formData.append('time', ultimaVezVisto);
-				formData.append('last_seen_location', `${ubicacion.longitude}, ${ubicacion.latitude}`);
-			}
-
-			imagenes.forEach((uri, index) => {
-				const uriParts = uri.split('.');
-				const fileType = uriParts[uriParts.length - 1];
-				formData.append('images', {
-					uri,
-					name: `photo_${index}.${fileType}`,
-					type: `image/${fileType}`,
-				});
-			});
-
-			if (imagencara) {
-				const uriParts = imagencara.split('.');
-				const fileType = uriParts[uriParts.length - 1];
-				formData.append('faceImage', {
-					uri: imagencara,
-					name: `face.${fileType}`,
-					type: `image/${fileType}`,
-
-				});
-			}
+			const petData = {
+				tipoRegistro,
+				nombre,
+				especie,
+				raza,
+				color,
+				edad,
+				edadUnidad,
+				sexo,
+				tamaño,
+				vacunado,
+				enfermedadPiel,
+				contacto,
+				metodoContacto,
+				descripcion,
+				tieneRecompensa,
+				ultimaVezVisto,
+				montoRecompensa,
+				ubicacion,
+				imagenes,
+				imagencara
+			};
 
 			try {
-				const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/register_pet`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'multipart/form-data',
-						'Authorization': `Bearer ${token}`,
-					},
-					body: formData,
-				});
-
-				const responseData = await response.json();
-
-				if (response.ok) {
+				const result = await addMascota(petData);
+				if (result) {
 					Alert.alert('Éxito', `Mascota registrada correctamente para ${tipoRegistro}`);
 					// Reset form
 					setNombre('');
@@ -478,7 +439,7 @@ const Registrar = () => {
 					setPrediccionIA(false);
 					setEnfermedadPiel(false);
 				} else {
-					Alert.alert('Error', responseData.failure || `No se pudo registrar la mascota para ${tipoRegistro}`);
+					Alert.alert('Error', `No se pudo registrar la mascota para ${tipoRegistro}`);
 				}
 			} catch (error) {
 				console.error(`Error registering pet for ${tipoRegistro}:`, error);
@@ -497,83 +458,6 @@ const Registrar = () => {
 			Alert.alert('Error', 'Por favor, selecciona opciones válidas en los menús desplegables');
 			return;
 		}
-
-		// Prepare reward text
-		const recompensaText = tieneRecompensa === 'si' 
-			? `$${montoRecompensa} MXN` 
-			: 'Sin recompensa';
-
-
-		// Create the new pet object with consistent structure
-		const newPet = {
-			id: Date.now().toString(),
-			nombre: tipoRegistro === 'encontrada' ? `Mascota encontrada ${especie}` : nombre,
-			edad: edad ? `${edad} ${edadUnidad}` : 'Desconocido',
-			raza: tipoRegistro === 'encontrada' ? 'Desconocido' : raza,
-			especie,
-			color,
-			tamaño,
-			sexo: sexo || 'Desconocido',
-			descripcion: descripcion || '',
-			estado: tipoRegistro === 'perdida' ? 'Desaparecido' : 'Presente',
-			imagen: imagenes,
-			imagencara,
-			vacunado: vacunado || false,
-			enfermedadPiel,
-			contacto: metodoContacto || 'Contactar através del perfil',
-			fechaRegistro: new Date().toISOString(),
-			tipoRegistro,
-			ubicacion: {
-				latitude: ubicacion.latitude,
-				longitude: ubicacion.longitude,
-
-				direccion
-			},
-			...(tipoRegistro === 'perdida' && {
-				ultimaVezVisto: ultimaVezVisto || 'Recién reportada',
-				ubicacionPerdida: direccion,
-				recompensa: recompensaText
-			}),
-			...(tipoRegistro === 'encontrada' && {
-				ubicacionEncontrada: direccion,
-				fechaEncontrada: new Date().toISOString()
-
-			}),
-			...(tipoRegistro === 'adopcion' && {
-				disponibleAdopcion: true,
-				requisitosAdopcion: 'Contactar para más información'
-			})
-		};
-
-		addMascota(newPet);
-
-
-		Alert.alert('Éxito', `Registro de mascota ${tipoRegistro} realizado correctamente`);
-
-		// Reset form
-
-		setTipoRegistro('presente');
-		setNombre('');
-		setEdad('');
-		setRaza('');
-		setEspecie('perro');
-		setImagenes([]);
-		setImagencara(null);
-		setVacunado(false);
-
-		setColor('');
-		setTamaño('');
-		setSexo('');
-		setDescripcion('');
-		setContacto('');
-		setMetodoContacto('');
-		setUltimaVezVisto('');
-		setRecompensa('');
-		setTieneRecompensa('no');
-		setMontoRecompensa('');
-		setEdadUnidad('años');
-		setPrediccionIA(false);
-		setEnfermedadPiel(false);
 	};
 
 	// Get title based on registration type
@@ -601,12 +485,13 @@ const Registrar = () => {
 		selectedValue={tipoRegistro}
 		style={styles.picker}
 		onValueChange={(itemValue) => setTipoRegistro(itemValue)}
+		dropdownIconColor="#e07978"
 		>
-		<Picker.Item label="Selecciona una opción" value="" />
-		<Picker.Item label="Registrar Mascota Presente" value="presente" />
-		<Picker.Item label="Perdí mi mascota" value="perdida" />
-		<Picker.Item label="Encontré una mascota" value="encontrada" />
-		<Picker.Item label="Ofrecer en adopción" value="adopcion" />
+		<Picker.Item label="Selecciona una opción" value="" style={styles.pickerItem} />
+		<Picker.Item label="Registrar Mascota Presente" value="presente" style={styles.pickerItem} />
+		<Picker.Item label="Perdí mi mascota" value="perdida" style={styles.pickerItem} />
+		<Picker.Item label="Encontré una mascota" value="encontrada" style={styles.pickerItem} />
+		<Picker.Item label="Ofrecer en adopción" value="adopcion" style={styles.pickerItem} />
 		</Picker>
 		</View>
 
@@ -614,15 +499,11 @@ const Registrar = () => {
 
 		{/* Different UI hint based on registration type */}
 		{tipoRegistro === 'presente' && (
-				<Text style={styles.typeHint}>
-				*Registra tus mascotas para mantener un registro de sus datos importantes.*
-				</Text>
+				<Text style={styles.typeHint}>*Registra tus mascotas para mantener un registro de sus datos importantes.*</Text>
 		)}
 
 		{tipoRegistro === 'perdida' && (
-			<Text style={styles.typeHint}>
-			*Al registrar una mascota perdida, será visible para que otros usuarios puedan ayudarte a encontrarla.*
-			</Text>
+			<Text style={styles.typeHint}>*Al registrar una mascota perdida, será visible para que otros usuarios puedan ayudarte a encontrarla.*</Text>
 		)}
 		{tipoRegistro === 'adopcion' && (
 			<Text style={styles.typeHint}>
@@ -660,11 +541,12 @@ const Registrar = () => {
 			<View style={styles.ageUnitPickerContainer}>
 			<Picker
 			selectedValue={edadUnidad}
-			style={styles.ageUnitPicker}
+			style={styles.picker}
 			onValueChange={(itemValue) => setEdadUnidad(itemValue)}
+			dropdownIconColor="#e07978"
 			>
-			<Picker.Item label="Meses" value="meses" />
-			{tipoRegistro !== 'adopcion' && <Picker.Item label="Años" value="años" />}
+			<Picker.Item label="Meses" value="meses" style={styles.pickerItem} />
+			{tipoRegistro !== 'adopcion' && <Picker.Item label="Años" value="años" style={styles.pickerItem} />}
 			</Picker>
 			</View>
 			</View>
@@ -751,16 +633,18 @@ const Registrar = () => {
 			{tipoRegistro !== 'encontrada' && (
 				<>
 				<Text style={styles.label}>Raza: <Text style={styles.asterisk}>*</Text></Text>
+				<View style={styles.pickerContainer}>
 				<Picker
 				selectedValue={raza}
 				style={styles.picker}
 				onValueChange={(itemValue) => setRaza(itemValue)}
+				dropdownIconColor="#e07978"
 				>
 				{getRazasList().map((razaOption, index) => (
-					<Picker.Item key={index} label={razaOption} value={razaOption} />
+					<Picker.Item key={index} label={razaOption} value={razaOption} style={styles.pickerItem} />
 				))}
 				</Picker>
-				</>
+				</View>				</>
 			)}
 			</>
 		)}
@@ -813,16 +697,17 @@ const Registrar = () => {
 		)}
 
 		<Text style={styles.label}>Tamaño: <Text style={styles.asterisk}>*</Text></Text>
-		<View style={styles.sizePickerContainer}>
+		<View style={styles.pickerContainer}>
 		<Picker
 		selectedValue={tamaño}
-		style={styles.sizePicker}
+		style={styles.picker}
 		onValueChange={(itemValue) => setTamaño(itemValue)}
+		dropdownIconColor="#e07978"
 		>
-		<Picker.Item label="Selecciona un tamaño" value="" />
-		<Picker.Item label="Pequeño" value="pequeño" />
-		<Picker.Item label="Mediano" value="mediano" />
-		<Picker.Item label="Grande" value="grande" />
+		<Picker.Item label="Selecciona un tamaño" value="" style={styles.pickerItem} />
+		<Picker.Item label="Pequeño" value="pequeño" style={styles.pickerItem} />
+		<Picker.Item label="Mediano" value="mediano" style={styles.pickerItem} />
+		<Picker.Item label="Grande" value="grande" style={styles.pickerItem} />
 		</Picker>
 		{tamaño ? <View style={[styles.sizeIndicator, styles[`sizeIndicator${tamaño.charAt(0).toUpperCase() + tamaño.slice(1)}`]]} /> : null}
 		</View>
@@ -830,24 +715,26 @@ const Registrar = () => {
 		{/* Show additional fields for lost pets */}
 		{tipoRegistro === 'perdida' && (
 			<>
-		<Text style={styles.label}>¿Cuándo fue la última vez que viste a tu mascota?<Text style={styles.asterisk}>*</Text></Text>
-		<TextInput
-		style={styles.input}
-		placeholder="Ej: Hace 2 días, Esta mañana, etc."
-		value={ultimaVezVisto}
-		onChangeText={setUltimaVezVisto}
-		/>
+			<Text style={styles.label}>¿Cuándo fue la última vez que viste a tu mascota?<Text style={styles.asterisk}>*</Text></Text>
+			<TextInput
+			style={styles.input}
+			placeholder="Ej: Hace 2 días, Esta mañana, etc."
+			value={ultimaVezVisto}
+			onChangeText={setUltimaVezVisto}
+			/>
 
 			<Text style={styles.label}>¿Tendrá recompensa?</Text>
+			<View style={styles.pickerContainer}>
 			<Picker
 			selectedValue={tieneRecompensa}
 			style={styles.picker}
 			onValueChange={(itemValue) => setTieneRecompensa(itemValue)}
+			dropdownIconColor="#e07978"
 			>
-			<Picker.Item label="No" value="no" />
-			<Picker.Item label="Sí" value="si" />
+			<Picker.Item label="No" value="no" style={styles.pickerItem} />
+			<Picker.Item label="Sí" value="si" style={styles.pickerItem} />
 			</Picker>
-
+			</View>
 			{tieneRecompensa === 'si' && (
 				<>
 				<Text style={styles.label}>Cantidad de recompensa (solo números)<Text style={styles.asterisk}>*</Text></Text>
@@ -874,17 +761,19 @@ const Registrar = () => {
 		/>
 
 		<Text style={styles.label}>Método de contacto preferido:</Text>
+		<View style={styles.pickerContainer}>
 		<Picker
 		selectedValue={metodoContacto}
 		style={styles.picker}
 		onValueChange={(itemValue) => setMetodoContacto(itemValue)}
+		dropdownIconColor="#e07978"
 		>
-		<Picker.Item label="Selecciona un método" value="" />
-		<Picker.Item label="WhatsApp" value="whatsapp" />
-		<Picker.Item label="Correo" value="correo" />
-		<Picker.Item label="Ambos" value="ambos" />
+		<Picker.Item label="Selecciona un método" value="" style={styles.pickerItem} />
+		<Picker.Item label="WhatsApp" value="whatsapp" style={styles.pickerItem} />
+		<Picker.Item label="Correo" value="correo" style={styles.pickerItem} />
+		<Picker.Item label="Ambos" value="ambos" style={styles.pickerItem} />
 		</Picker>
-
+		</View>
 		{/* Map Location Selector */}
 		{(tipoRegistro === 'perdida' || tipoRegistro === 'encontrada') && (
 			<>
@@ -936,9 +825,7 @@ const Registrar = () => {
 			</TouchableOpacity>
 			</View>
 		)}
-		<Text style={styles.aiHint}>
-		*Esta imagen se usará para identificar a tu mascota mediante reconocimiento facial*
-		</Text>
+		<Text style={styles.aiHint}> *Esta imagen se usará para identificar a tu mascota mediante reconocimiento facial* </Text>
 		</View>
 
 
@@ -1131,11 +1018,9 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#efedeaff',
-		fontWeight: 'bold',
 	},
 	scrollContainer: {
 		padding: 20,
-		fontWeight: 'bold',
 	},
 	title: {
 		fontSize: 24,
@@ -1163,22 +1048,28 @@ const styles = StyleSheet.create({
 		color: 'red',
 	},
 	pickerContainer: {
-		backgroundColor: '#fff',
+		backgroundColor: 'transparent',
 		borderWidth: 1,
-		borderColor: '#ddd',
+		borderColor: 'transparent',
 		borderRadius: 10,
 		marginBottom: 15,
-		overflow: 'hidden', // Ensures the Picker respects the border radius
+		overflow: 'hidden',
 	},
 	picker: {
-		backgroundColor: 'transparent', // To see the container's background
-		borderWidth: 0, // Handled by container
-		fontWeight: 'bold',
+		borderWidth: 1,
+		borderColor: '#ddd',
+		borderRadius: 8,
+		backgroundColor: '#fff',
+		marginBottom: 15,
+		elevation: 10,
+		height: 60,
+	},
+	pickerItem: {
+		color: '#000',
 	},
 	imageContainer: {
 		alignItems: 'center',
 		marginBottom: 15,
-		fontWeight: 'bold',
 	},
 	imageButton: {
 		backgroundColor: '#000',
@@ -1186,13 +1077,11 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		marginTop: 10,
 		marginBottom: 20,
-		fontWeight: 'bold',
 	},
 	buttonContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
-		fontWeight: 'bold',
 	},
 	imageButtonText: {
 		fontWeight: 'bold',
@@ -1229,7 +1118,6 @@ const styles = StyleSheet.create({
 		borderRadius: 5,
 		borderWidth: 1,
 		borderColor: '#ddd',
-		fontWeight: 'bold',
 		flexDirection: 'column',
 		alignItems: 'flex-start',
 	},
@@ -1245,7 +1133,6 @@ const styles = StyleSheet.create({
 		padding: 15,
 		borderRadius: 10,
 		marginTop: 20,
-		fontWeight: 'bold',
 	},
 	submitButtonText: {
 		color: 'white',
@@ -1276,12 +1163,10 @@ const styles = StyleSheet.create({
 		overflow: 'hidden',
 		borderWidth: 1,
 		borderColor: '#ddd',
-		fontWeight: 'bold',
 	},
 	map: {
 		width: '100%',
 		height: 220,
-		fontWeight: 'bold',
 	},
 	addressText: {
 		padding: 5,
@@ -1309,7 +1194,6 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0, 0, 0, 0.5)',
 		justifyContent: 'center',
 		alignItems: 'center',
-		fontWeight: 'bold',
 	},
 	photoInstructionsContainer: {
 		backgroundColor: '#fff',
@@ -1318,7 +1202,6 @@ const styles = StyleSheet.create({
 		margin: 20,
 		alignItems: 'center',
 		maxWidth: 350,
-		fontWeight: 'bold',
 	},
 	photoInstructionsTitle: {
 		fontSize: 20,
@@ -1346,13 +1229,11 @@ const styles = StyleSheet.create({
 		height: 200,
 		borderRadius: 10,
 		marginBottom: 20,
-		fontWeight: 'bold',
 	},
 	photoInstructionsButtons: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		width: '100%',
-		fontWeight: 'bold',
 	},
 	photoInstructionsButton: {
 		backgroundColor: '#b04f4f',
@@ -1361,7 +1242,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginRight: 5,
 		alignItems: 'center',
-		fontWeight: 'bold',
 	},
 	photoInstructionsCancelButton: {
 		backgroundColor: '#777',
@@ -1370,7 +1250,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginLeft: 5,
 		alignItems: 'center',
-		fontWeight: 'bold',
 	},
 	photoInstructionsButtonText: {
 		color: '#fff',
@@ -1387,13 +1266,11 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		fontWeight: 'bold',
 	},
 	colorPreview: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		flex: 1,
-		fontWeight: 'bold',
 	},
 	customPickerText: {
 		fontSize: 16,
@@ -1409,7 +1286,6 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		marginBottom: 15,
 		maxHeight: 200,
-		fontWeight: 'bold',
 	},
 	colorOption: {
 		flexDirection: 'row',
@@ -1417,7 +1293,6 @@ const styles = StyleSheet.create({
 		padding: 12,
 		borderBottomWidth: 1,
 		borderBottomColor: '#eee',
-		fontWeight: 'bold',
 	},
 	colorSquare: {
 		width: 20,
@@ -1425,7 +1300,6 @@ const styles = StyleSheet.create({
 		borderRadius: 4,
 		borderWidth: 1,
 		marginRight: 10,
-		fontWeight: 'bold',
 	},
 	colorOptionText: {
 		fontSize: 16,
@@ -1443,10 +1317,11 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 	},
 	ageContainer: {
+		backgroundColor: 'transparent',
+		borderColor: 'transparent',
 		flexDirection: 'row',
 		alignItems: 'center',
 		marginBottom: 15,
-		fontWeight: 'bold',
 	},
 	ageInput: {
 		flex: 1,
@@ -1460,9 +1335,9 @@ const styles = StyleSheet.create({
 	},
 	ageUnitPickerContainer: {
 		flex: 1,
-		backgroundColor: '#fff',
+		backgroundColor: 'transparent',
 		borderWidth: 1,
-		borderColor: '#ddd',
+		borderColor: 'transparent',
 		borderRadius: 10,
 		overflow: 'hidden',
 	},
@@ -1551,83 +1426,3 @@ const styles = StyleSheet.create({
 });
 
 export default Registrar;
-
-const translateSpecies = (species) => {
-	switch (species) {
-		case 'perro':
-			return 'DOG';
-		case 'gato':
-			return 'CAT';
-		case 'ave':
-			return 'BIRD';
-		case 'conejo':
-			return 'BUNNY';
-		default:
-			return species;
-	}
-};
-
-const translateAgeUnit = (ageUnit) => {
-	switch (ageUnit) {
-		case 'años':
-			return 'YEARS';
-		case 'meses':
-			return 'MONTHS';
-		default:
-			return ageUnit;
-	}
-};
-
-const translateSex = (sex) => {
-	switch (sex) {
-		case 'macho':
-			return 'MALE';
-		case 'hembra':
-			return 'FEMALE';
-		case 'desconocido':
-			return 'UNKNOWN';
-		default:
-			return sex;
-	}
-};
-
-const translateSize = (size) => {
-	switch (size) {
-		case 'pequeño':
-			return 'SMALL';
-		case 'mediano':
-			return 'MEDIUM';
-		case 'grande':
-			return 'BIG';
-		default:
-			return size;
-	}
-};
-
-const translateContactMethod = (contactMethod) => {
-	switch (contactMethod) {
-		case 'whatsapp':
-			return 'WHATSAPP';
-		case 'correo':
-			return 'EMAIL';
-		case 'ambos':
-			return 'BOTH';
-		default:
-			return contactMethod;
-	}
-};
-
-const translateRecordType = (recordType) => {
-	switch (recordType) {
-		case 'presente':
-			return 'PRESENT';
-		case 'perdida':
-			return 'LOST';
-		case 'adopcion':
-			return 'ADOPTION';
-		case 'encontrada':
-			return 'FOUND';
-		default:
-			return recordType;
-	}
-};

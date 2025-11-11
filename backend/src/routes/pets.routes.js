@@ -8,18 +8,22 @@ import fs from 'fs';
 //Local packages
 import { 
 	registerPetController, 
+	registerPetControllerButTest,
 	getPetsController,
 	getPetByIdController,
 	registerMissingAlertController,
+	registerFoundAlertController,
 	registerAdoptionController,
 	updatePetController,
-	deletePetController,
 	deletePetAlertController,
 	getPetFacePictureController,
 	getPetBodyPictureController,
 	getPetMatchesController,
 	testAlertController,
-	getAdoptionPetsController
+	getAdoptionPetsController,
+	updateAdoptionController,
+	deleteAdoptionController,
+	deletePetController
 } from '../controllers/pets.controller.js';
 import { 
 	validateRequest, 
@@ -59,12 +63,15 @@ const upload = multer({ storage: storage })
 const RecordType = Object.freeze({
 	PRESENT: "PRESENT",
 	LOST: "LOST",
-	ADOPTION: "ADOPTION"
+	ADOPTION: "ADOPTION",
+	FOUND: "FOUND"
 });
 
 const Species = Object.freeze({
 	DOG: "DOG",
 	CAT: "CAT",
+	BUNNY: "BUNNY",
+	BIRD: "BIRD",
 	OTHER: "OTHER"
 });
 
@@ -114,11 +121,22 @@ petsRouter.post('/register_pet',
 	registerPetController
 );
 
+petsRouter.post('/test_register',
+	upload.any(),
+	registerPetValidators,
+	validateRequest,
+	registerPetControllerButTest
+);
+
 petsRouter.post('/register_alert', authRequired, registerMissingAlertController);
+
+petsRouter.post('/register_found_alert', authRequired, registerFoundAlertController);
 
 petsRouter.post('/register_adoption', authRequired, upload.any(), registerAdoptionController);
 
 petsRouter.put('/update_pet/:id', authRequired, upload.any(), updatePetController);
+
+petsRouter.put('/pets/:pet_id/adoption', authRequired, updateAdoptionController);
 
 petsRouter.delete('/delete_pet/:id', authRequired, deletePetController);
 
@@ -136,3 +154,5 @@ petsRouter.get('/matches', authRequired, getPetMatchesController);
 petsRouter.get('/test-alert/:municipality', testAlertController);
 
 petsRouter.get('/adoption', authRequired, getAdoptionPetsController);
+
+petsRouter.delete('/adoption/:petId', authRequired, deleteAdoptionController);

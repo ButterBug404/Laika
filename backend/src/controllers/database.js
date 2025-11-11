@@ -112,7 +112,7 @@ export async function retrieveUserById(id) {
 	let conn;
 	try {
 		conn = await pool.getConnection();
-		const rows = await conn.query("SELECT id, name, pat_name, mat_name, email, phone, state, municipality, created_at FROM laika_users WHERE id = ?", [id]);
+		const rows = await conn.query("SELECT id, name, pat_name, mat_name, email, phone, state, municipality, created_at, expo_push_token FROM laika_users WHERE id = ?", [id]);
 		return rows[0];
 	} catch (err) {
 		throw err;
@@ -233,6 +233,20 @@ export async function deletePetAlert(id) {
     }
 }
 
+export async function deleteAdoption(petId) {
+	let conn;
+	try {
+		conn = await pool.getConnection();
+		const query = "DELETE FROM adoptions WHERE pet_id = ?";
+		const res = await conn.query(query, [petId]);
+		return res;
+	} catch (err) {
+		console.log("Error at deleteAdoption, ", err);
+	} finally {
+		if (conn) conn.release();
+	}
+}
+
 export async function updateUser(id, user) {
     let conn;
     try {
@@ -252,7 +266,7 @@ export async function retrieveMissingPetsNearLocation(location, radius = 10000) 
     try {
         conn = await pool.getConnection();
         const query = `
-            SELECT p.*, pa.last_seen_location
+            SELECT p.*, pa.id as alert_id, pa.last_seen_location
             FROM pets p
             JOIN pet_alerts pa ON p.id = pa.pet_id
             WHERE pa.status = 'MISSING'
@@ -298,8 +312,11 @@ export async function retrievePetMatchesByUserId(userId) {
                 fpa.id AS found_pet_alert_id,
                 fpa.time AS found_pet_alert_time,
                 ST_AsText(fpa.last_seen_location) AS found_pet_last_seen_location,
+                fpa.contact_info AS found_pet_contact_info,
+                fpa.contact_method AS found_pet_contact_method,
                 fp.id AS found_pet_id,
-                fp.name AS found_pet_name
+                fp.name AS found_pet_name,
+                fp.description AS found_pet_description
             FROM
                 pet_matches pm
             JOIN
@@ -386,6 +403,38 @@ export async function retrieveAdoptionPets() {
         `;
         const rows = await conn.query(query);
         return rows;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (conn) conn.end();
+    }
+}
+
+export async function updateAdoptionByPetId(petId, adoption) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = "UPDATE adoptions SET description = ?, contact_info = ?, contact_method = ? WHERE pet_id = ?";
+        const res = await conn.query(query, [
+            adoption.description,
+            adoption.contact_info,
+            adoption.contact_method,
+            petId
+        ]);
+        return res;
+    } catch (err) {
+        console.log("Error at updateAdoptionByPetId, ", err);
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+export async function retrieveAdoptionByPetId(petId) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM adoptions WHERE pet_id = ?", [petId]);
+        return rows[0];
     } catch (err) {
         throw err;
     } finally {

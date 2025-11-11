@@ -421,12 +421,28 @@ const AppContent = () => {
 	const [isConnected, setIsConnected] = useState(true);
 	const [isAlertModalVisible, setIsAlertModalVisible] = useState(false);
 	const [alertData, setAlertData] = useState(null);
+	const [initialNotificationData, setInitialNotificationData] = useState(null);
 
 
 	useEffect(() => {
 		const unsubscribe = NetInfo.addEventListener(state => {
 			setIsConnected(state.isConnected);
 		});
+
+		// Check for initial notification when app starts
+		const checkInitialNotification = async () => {
+			const lastNotificationResponse = await Notifications.getLastNotificationResponseAsync();
+			console.log("CUM: ", lastNotificationResponse);
+			if (lastNotificationResponse) {
+				console.log("App opened by notification:", lastNotificationResponse);
+				const { data } = lastNotificationResponse.notification.request.content;
+				if (data && data.pet && data.user && data.alert) {
+					setInitialNotificationData(data);
+				}
+			}
+		};
+
+		checkInitialNotification();
 
 		return () => {
 			unsubscribe();
@@ -441,6 +457,13 @@ const AppContent = () => {
 				duration: 800,
 				useNativeDriver: true,
 			}).start();
+
+			// If there was an initial notification, show the modal now that we are logged in
+			if (initialNotificationData) {
+				setAlertData(initialNotificationData);
+				setIsAlertModalVisible(true);
+				setInitialNotificationData(null); // Clear it after use
+			}
 		}
 	}, [isLoggedIn]);
 
@@ -470,16 +493,14 @@ const AppContent = () => {
 						setAlertData(data);
 						setIsAlertModalVisible(true);
 					});
+
+					socket.on('newPetMatch', (data) => {
+						setAlertData(data); // Assuming the modal can handle matchPayload structure
+						setIsAlertModalVisible(true);
+					});
 				}
 
-				// Handle notifications received while the app is open
-				const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-					// This listener fires whenever a notification is received while the app is foregrounded
-					// We might want to show an in-app alert or update UI, but for now, we'll just log it.
-					console.log("Notification received while app is open:", notification);
-				});
-
-				// Handle notification responses (when user taps on a notification)
+				// Handle notification responses (when user taps on a notification while app is in background/foreground)
 				const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
 					console.log("Notification response received:", response);
 					const { data } = response.notification.request.content;
@@ -489,19 +510,7 @@ const AppContent = () => {
 					}
 				});
 
-				// Handle case where app is opened by tapping a notification (app was closed)
-				const lastNotificationResponse = await Notifications.getLastNotificationResponseAsync();
-				if (lastNotificationResponse) {
-					console.log("App opened by notification:", lastNotificationResponse);
-					const { data } = lastNotificationResponse.notification.request.content;
-					if (data && data.pet && data.user && data.alert) {
-						setAlertData(data);
-						setIsAlertModalVisible(true);
-					}
-				}
-
 				return () => {
-					Notifications.removeNotificationSubscription(notificationListener);
 					Notifications.removeNotificationSubscription(responseListener);
 				};
 			}
